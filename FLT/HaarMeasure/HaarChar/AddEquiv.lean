@@ -238,6 +238,30 @@ variable {G : Type*} [Group G] [TopologicalSpace G]
     {H : Type*} [Group H] [TopologicalSpace H]
     [IsTopologicalGroup H] [LocallyCompactSpace H]
 
+namespace ContinuousMulEquiv
+
+-- Define how prodCongr applies to elements
+@[to_additive ContinuousAddEquiv.prodCongr_apply, simp]
+lemma prodCongr_apply {A B C D : Type*} [Group A] [Group B] [Group C] [Group D]
+    [TopologicalSpace A] [TopologicalSpace B] [TopologicalSpace C] [TopologicalSpace D]
+    (φ : A ≃ₜ* B) (ψ : C ≃ₜ* D) (x : A) (y : C) :
+    (φ.prodCongr ψ) (x, y) = (φ x, ψ y) := by
+  -- This should follow from the definition of prodCongr
+  -- If it doesn't work by rfl, we need to unfold the definition
+  rfl
+
+-- Alternative: state it as a coercion lemma
+@[to_additive ContinuousAddEquiv.coe_prodCongr, simp]
+lemma coe_prodCongr {A B C D : Type*} [Group A] [Group B] [Group C] [Group D]
+    [TopologicalSpace A] [TopologicalSpace B] [TopologicalSpace C] [TopologicalSpace D]
+    (φ : A ≃ₜ* B) (ψ : C ≃ₜ* D) :
+    ⇑(φ.prodCongr ψ) = Prod.map φ ψ := by
+  -- Show equality of functions
+  ext ⟨x, y⟩
+  rfl
+
+end ContinuousMulEquiv
+
 /-
 Key ingredients needed for this proof:
 1. Haar measure on G × H is (up to scaling) the product measure haar_G × haar_H
@@ -245,21 +269,7 @@ Key ingredients needed for this proof:
 3. The scalar factor is multiplicative for products
 -/
 
--- Define how prodCongr applies to elements
-namespace ContinuousMulEquiv
-
-@[simp]
-lemma prodCongr_apply {A B C D : Type*} [Group A] [Group B] [Group C] [Group D]
-    [TopologicalSpace A] [TopologicalSpace B] [TopologicalSpace C] [TopologicalSpace D]
-    (φ : A ≃ₜ* B) (ψ : C ≃ₜ* D) (x : A) (y : C) :
-    (φ.prodCongr ψ) (x, y) = (φ x, ψ y) := by
-  -- By definition of prodCongr, it uses the underlying MulEquiv.prodCongr
-  -- which should map (x, y) ↦ (φ x, ψ y)
-  rfl
-
-end ContinuousMulEquiv
-
-@[to_additive MeasureTheory.addEquivAddHaarChar_prodCongr]
+@[to_additive addEquivAddHaarChar_prodCongr]
 lemma mulEquivHaarChar_prodCongr [MeasurableSpace G] [BorelSpace G]
     [MeasurableSpace H] [BorelSpace H] (φ : G ≃ₜ* G) (ψ : H ≃ₜ* H) :
     letI : MeasurableSpace (G × H) := borel _
@@ -277,13 +287,8 @@ lemma mulEquivHaarChar_prodCongr [MeasurableSpace G] [BorelSpace G]
 
   -- The map of the product homeomorphism can be decomposed
   have h_map_prod : map (φ.prodCongr ψ) = map (Prod.map φ ψ) := by
-    -- It suffices to show the functions are equal
-    suffices h : (φ.prodCongr ψ : G × H → G × H) = Prod.map φ ψ by
-      exact congr_arg map h
-    -- Show equality by checking on elements
-    ext ⟨x, y⟩
-    -- By definition of prodCongr
-    simp [ContinuousMulEquiv.prodCongr_apply, Prod.map_apply]
+    -- Use the coercion lemma
+    rw [ContinuousMulEquiv.coe_prodCongr]
 
   -- We need to relate the Haar measure on the product to the product of Haar measures
   -- This uses the fact that haar on G × H equals haar_G × haar_H up to scaling
