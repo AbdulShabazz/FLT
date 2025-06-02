@@ -269,7 +269,7 @@ lemma mulEquivHaarChar_prodCongr [MeasurableSpace G] [BorelSpace G]
     -- Show equality by checking on elements
     ext ⟨x, y⟩
     -- By definition of prodCongr
-    rfl
+    simp only [ContinuousMulEquiv.prodCongr_apply, Prod.map_apply]
 
   -- We need to relate the Haar measure on the product to the product of Haar measures
   -- This uses the fact that haar on G × H equals haar_G × haar_H up to scaling
