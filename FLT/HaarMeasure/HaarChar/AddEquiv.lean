@@ -245,6 +245,20 @@ Key ingredients needed for this proof:
 3. The scalar factor is multiplicative for products
 -/
 
+-- Define how prodCongr applies to elements
+namespace ContinuousMulEquiv
+
+@[simp]
+lemma prodCongr_apply {A B C D : Type*} [Group A] [Group B] [Group C] [Group D]
+    [TopologicalSpace A] [TopologicalSpace B] [TopologicalSpace C] [TopologicalSpace D]
+    (φ : A ≃ₜ* B) (ψ : C ≃ₜ* D) (x : A) (y : C) :
+    (φ.prodCongr ψ) (x, y) = (φ x, ψ y) := by
+  -- By definition of prodCongr, it uses the underlying MulEquiv.prodCongr
+  -- which should map (x, y) ↦ (φ x, ψ y)
+  rfl
+
+end ContinuousMulEquiv
+
 @[to_additive MeasureTheory.addEquivAddHaarChar_prodCongr]
 lemma mulEquivHaarChar_prodCongr [MeasurableSpace G] [BorelSpace G]
     [MeasurableSpace H] [BorelSpace H] (φ : G ≃ₜ* G) (ψ : H ≃ₜ* H) :
@@ -269,7 +283,7 @@ lemma mulEquivHaarChar_prodCongr [MeasurableSpace G] [BorelSpace G]
     -- Show equality by checking on elements
     ext ⟨x, y⟩
     -- By definition of prodCongr
-    simp only [ContinuousMulEquiv.prodCongr_apply, Prod.map_apply]
+    simp [ContinuousMulEquiv.prodCongr_apply, Prod.map_apply]
 
   -- We need to relate the Haar measure on the product to the product of Haar measures
   -- This uses the fact that haar on G × H equals haar_G × haar_H up to scaling
