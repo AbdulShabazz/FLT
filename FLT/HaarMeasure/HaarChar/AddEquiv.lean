@@ -238,6 +238,13 @@ variable {G : Type*} [Group G] [TopologicalSpace G]
     {H : Type*} [Group H] [TopologicalSpace H]
     [IsTopologicalGroup H] [LocallyCompactSpace H]
 
+/-
+Key ingredients needed for this proof:
+1. Haar measure on G × H is (up to scaling) the product measure haar_G × haar_H
+2. The map of a product preserves products: map (f × g) (μ × ν) = (map f μ) × (map g ν)
+3. The scalar factor is multiplicative for products
+-/
+
 @[to_additive MeasureTheory.addEquivAddHaarChar_prodCongr]
 lemma mulEquivHaarChar_prodCongr [MeasurableSpace G] [BorelSpace G]
     [MeasurableSpace H] [BorelSpace H] (φ : G ≃ₜ* G) (ψ : H ≃ₜ* H) :
@@ -254,14 +261,18 @@ lemma mulEquivHaarChar_prodCongr [MeasurableSpace G] [BorelSpace G]
   -- First, we use the characterization of mulEquivHaarChar in terms of haarScalarFactor
   rw [mulEquivHaarChar_eq haar (φ.prodCongr ψ)]
 
-  -- We need to relate the Haar measure on the product to the product of Haar measures
-  -- This uses the fact that haar on G × H equals haar_G × haar_H up to scaling
-
   -- The map of the product homeomorphism can be decomposed
   have h_map_prod : map (φ.prodCongr ψ) = map (Prod.map φ ψ) := by
-    ext s hs
-    simp only [map_apply hs]
+    -- It suffices to show the functions are equal
+    suffices h : (φ.prodCongr ψ : G × H → G × H) = Prod.map φ ψ by
+      exact congr_arg map h
+    -- Show equality by checking on elements
+    ext ⟨x, y⟩
+    -- By definition of prodCongr
     rfl
+
+  -- We need to relate the Haar measure on the product to the product of Haar measures
+  -- This uses the fact that haar on G × H equals haar_G × haar_H up to scaling
 
   -- Now we use that the Haar scalar factor distributes over products
   -- This requires relating the Haar measure on G × H to the product measure
@@ -282,9 +293,21 @@ lemma mulEquivHaarChar_prodCongr [MeasurableSpace G] [BorelSpace G]
   have h_scalar_prod : haarScalarFactor haar (map (φ.prodCongr ψ) haar) =
       haarScalarFactor (haar : Measure G) (map φ haar) *
       haarScalarFactor (haar : Measure H) (map ψ haar) := by
-    -- This follows from the product structure of Haar measure
-    -- and how the product homeomorphism acts componentwise
-    sorry -- This requires the product structure theorem for Haar measure
+    -- Key steps:
+    -- 1. Use h_map_prod to rewrite map (φ.prodCongr ψ) as map (Prod.map φ ψ)
+    rw [h_map_prod]
+
+    -- 2. Use that haar on G × H is proportional to (haar : Measure G).prod (haar : Measure H)
+    -- Let c be the proportionality constant
+    -- Then: haar = c • ((haar : Measure G).prod (haar : Measure H))
+
+    -- 3. Show that map (Prod.map φ ψ) (μ.prod ν) = (map φ μ).prod (map ψ ν)
+    -- This is a general property of product measures
+
+    -- 4. Use the scaling properties of haarScalarFactor
+    -- Since the measures are proportional, the scalar factors multiply
+
+    sorry -- This requires theorems about product Haar measures
 
   -- Complete the proof using the characterization
   rw [h_scalar_prod]
