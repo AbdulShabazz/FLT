@@ -444,7 +444,7 @@ variable {ι : Type*}
 
 /-- The Haar measure on a restricted product is the restricted product of Haar measures -/
 lemma haar_restrictedProduct_eq_restrictedProduct_haar
-    (G : ι → Type*) [∀ i, TopologicalSpace (G i)] [∀ i, Group (G i)] [∀ i, TopologicalGroup (G i)]
+    (G : ι → Type*) [∀ i, TopologicalSpace (G i)] [∀ i, Group (G i)] [∀ i, IsTopologicalGroup (G i)]
     (C : Π i, OpenSubgroup (G i)) [∀ i, CompactSpace (C i)] :
     haar (Πʳ i, [G i, C i]) = restrictedProduct (fun i ↦ haar (G i)) (fun i ↦ haar (C i : Set (G i))) :=
   sorry
@@ -476,7 +476,7 @@ lemma haar_cylinder_eq_prod (J : Finset ι) (U : Π i : J, Set (G i))
 lemma image_cylinder_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
     (J : Finset ι) (U : Π i : J, Set (G i)) :
-    (MulEquiv.restrictedProductCongrRight φ hφ) '' {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
+    (restrictedProductCongrRight_apply φ hφ) '' {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
     {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ φ i '' (U i)} :=
   sorry
 
@@ -486,7 +486,7 @@ lemma haar_cylinder_scale_prod (φ : Π i, (G i) ≃ₜ* (G i))
     (J : Finset ι) (U : Π i : J, Set (G i))
     (hU_open : ∀ i : J, IsOpen (U i)) (hU_compact : ∀ i : J, IsCompact (U i))
     (hU_nonempty : ∀ i : J, (U i).Nonempty) :
-    Measure.map (MulEquiv.restrictedProductCongrRight φ hφ) haar
+    Measure.map (restrictedProductCongrRight_apply φ hφ) haar
       {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
     (∏ i in J, mulEquivHaarChar (φ i)) • haar {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} :=
   sorry
@@ -516,7 +516,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G 
   letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
   haveI : BorelSpace (Πʳ i, [G i, C i]) := ⟨rfl⟩
 
-  set ψ := MulEquiv.restrictedProductCongrRight φ hφ with hψ_def
+  set ψ := restrictedProductCongrRight_apply φ hφ with hψ_def
 
   -- We prove that both sides give the same scaling factor for Haar measure
   suffices h : ∀ (E : Set (Πʳ i, [G i, C i])), MeasurableSet E →
