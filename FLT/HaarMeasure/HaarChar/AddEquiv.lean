@@ -564,6 +564,9 @@ lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G 
   · exact h_cylinders
   · exact hE
 
+end ContinuousMulEquiv
 end restrictedproduct
-
 end MeasureTheory
+end MeasureTheory.Measure
+
+#lint
