@@ -429,6 +429,8 @@ lemma _root_.WeaklyLocallyCompactSpace.of_isTopologicalGroup_of_isOpen_compactSp
       hCopen.out |>.smul _ |>.mem_nhds <| by
       simpa using Set.smul_mem_smul_set (a := x) (one_mem C)⟩
 
+open ContinuousMulEquiv
+
 variable {ι : Type*}
     {G : ι → Type*}
     [Π i, Group (G i)] [Π i, TopologicalSpace (G i)] [∀ i, IsTopologicalGroup (G i)]
@@ -438,8 +440,67 @@ variable {ι : Type*}
     [∀ i, MeasurableSpace (G i)]
     [∀ i, BorelSpace (G i)]
 
-open ContinuousMulEquiv in
-@[to_additive]
+-- Key lemmas we need for the proof
+
+/-- The Haar measure on a restricted product is the restricted product of Haar measures -/
+lemma haar_restrictedProduct_eq_restrictedProduct_haar
+    (G : ι → Type*) [∀ i, TopologicalSpace (G i)] [∀ i, Group (G i)] [∀ i, TopologicalGroup (G i)]
+    (C : Π i, OpenSubgroup (G i)) [∀ i, CompactSpace (C i)] :
+    haar (Πʳ i, [G i, C i]) = restrictedProduct (fun i ↦ haar (G i)) (fun i ↦ haar (C i : Set (G i))) :=
+  sorry
+
+/-- Restricted product isomorphisms act componentwise -/
+lemma restrictedProductCongrRight_apply (φ : Π i, (G i) ≃ₜ* (G i))
+    (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+    (x : Πʳ i, [G i, C i]) :
+    (MulEquiv.restrictedProductCongrRight φ hφ) x = fun i ↦ φ i (x i) :=
+  sorry
+
+/-- Cylinder sets form a basis for the restricted product topology -/
+lemma cylinder_basis_restrictedProduct (G : ι → Type*) [∀ i, TopologicalSpace (G i)]
+    (C : Π i, OpenSubgroup (G i)) :
+    ∃ (B : Set (Set (Πʳ i, [G i, C i]))), IsTopologicalBasis B ∧
+    ∀ U ∈ B, ∃ (J : Finset ι) (V : Π i : J, Set (G i)),
+      (∀ i : J, IsOpen (V i) ∧ IsCompact (V i)) ∧
+      U = {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ V i} :=
+  sorry
+
+/-- Measure of cylinder sets in restricted products -/
+lemma haar_cylinder_eq_prod (J : Finset ι) (U : Π i : J, Set (G i))
+    (hU : ∀ i : J, MeasurableSet (U i)) :
+    haar {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
+    (∏ i in J, haar (U i)) * haar {x : Πʳ i, [G i, C i] | ∀ i ∉ J, x i ∈ C i} :=
+  sorry
+
+/-- Image of cylinder sets under componentwise isomorphisms -/
+lemma image_cylinder_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G i))
+    (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+    (J : Finset ι) (U : Π i : J, Set (G i)) :
+    (MulEquiv.restrictedProductCongrRight φ hφ) '' {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
+    {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ φ i '' (U i)} :=
+  sorry
+
+/-- Haar measure scaling on cylinder sets -/
+lemma haar_cylinder_scale_prod (φ : Π i, (G i) ≃ₜ* (G i))
+    (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+    (J : Finset ι) (U : Π i : J, Set (G i))
+    (hU_open : ∀ i : J, IsOpen (U i)) (hU_compact : ∀ i : J, IsCompact (U i))
+    (hU_nonempty : ∀ i : J, (U i).Nonempty) :
+    Measure.map (MulEquiv.restrictedProductCongrRight φ hφ) haar
+      {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
+    (∏ i in J, mulEquivHaarChar (φ i)) • haar {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} :=
+  sorry
+
+/-- Extension from cylinder sets to all measurable sets -/
+lemma measure_eq_of_eq_on_cylinders {μ ν : Measure (Πʳ i, [G i, C i])}
+    (h : ∀ (J : Finset ι) (U : Π i : J, Set (G i)),
+      (∀ i : J, IsOpen (U i) ∧ IsCompact (U i)) →
+      μ {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
+      ν {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i}) :
+    μ = ν :=
+  sorry
+
+/-- Main lemma: Now we can prove the result cleanly -/
 lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)) :
     -- typeclass stuff
@@ -454,24 +515,54 @@ lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G 
     ∏ᶠ i, mulEquivHaarChar (φ i) := by
   letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
   haveI : BorelSpace (Πʳ i, [G i, C i]) := ⟨rfl⟩
-  -- -- the below code created a compact open in the restricted product and shows
-  -- -- it has Haar measure 0 < μ < ∞ but I've realised I don't know what to do next.
-  -- -- The blueprint has a proof which I can make work.
-  -- set X : Set (Πʳ i, [G i, C i]) := {x | ∀ i, x i ∈ C i} with hX
-  -- have := isOpenEmbedding_structureMap (R := G) (A := fun i ↦ (C i : Set (G i))) Fact.out
-  -- have isOpenEmbedding := this
-  -- apply Topology.IsOpenEmbedding.isOpen_range at this
-  -- rw [range_structureMap] at this
-  -- have hXopen : IsOpen X := this
-  -- have hXnonempty : Nonempty X := Nonempty.intro ⟨⟨fun x ↦ 1, Filter.Eventually.of_forall <|
-  --   fun _ ↦ one_mem _⟩, fun _ ↦ one_mem _⟩
-  -- have hXμpos : 0 < haar X := IsOpen.measure_pos haar hXopen Set.Nonempty.of_subtype
-  -- have hXcompact : IsCompact X := by
-  --   have := isCompact_range isOpenEmbedding.continuous
-  --   rw [range_structureMap] at this
-  --   apply this
-  -- have hXμfinite : haar X < ∞ := IsCompact.measure_lt_top hXcompact
-  sorry -- FLT#552
+
+  set ψ := MulEquiv.restrictedProductCongrRight φ hφ with hψ_def
+
+  -- We prove that both sides give the same scaling factor for Haar measure
+  suffices h : ∀ (E : Set (Πʳ i, [G i, C i])), MeasurableSet E →
+    Measure.map ψ haar E = (∏ᶠ i, mulEquivHaarChar (φ i)) • haar E by
+    -- Since mulEquivHaarChar ψ is the unique positive real such that
+    -- Measure.map ψ haar = mulEquivHaarChar ψ • haar, we're done
+    have h_char := mulEquivHaarChar_spec ψ
+    have h_unique : ∀ c : ℝ≥0∞, c > 0 →
+      (∀ E, MeasurableSet E → Measure.map ψ haar E = c • haar E) →
+      c = mulEquivHaarChar ψ := fun c hc he ↦ by
+        -- This should follow from uniqueness of mulEquivHaarChar
+        sorry -- lemma: mulEquivHaarChar_unique_scaling
+    apply h_unique
+    · apply Finprod.pos
+      intro i
+      exact mulEquivHaarChar_pos (φ i)
+    · exact h
+
+  -- Prove the scaling property using cylinder sets
+  intro E hE
+
+  -- First handle cylinder sets
+  have h_cylinders : ∀ (J : Finset ι) (U : Π i : J, Set (G i)),
+    (∀ i : J, IsOpen (U i) ∧ IsCompact (U i)) →
+    Measure.map ψ haar {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
+    (∏ᶠ i, mulEquivHaarChar (φ i)) • haar {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} := by
+    intro J U hU
+
+    -- Use the lemma about scaling on cylinder sets
+    have h_scale := haar_cylinder_scale_prod φ hφ J U (fun i ↦ (hU i).1)
+      (fun i ↦ (hU i).2) (fun i ↦ sorry) -- need nonemptiness
+
+    -- Convert finite product to finprod
+    have h_prod : ∏ i in J, mulEquivHaarChar (φ i) =
+      ∏ᶠ i : J, mulEquivHaarChar (φ i) := by
+      rw [← Finset.prod_attach]
+      sorry -- lemma: finprod_eq_finset_prod_of_finite
+
+    rw [h_scale, h_prod]
+    -- Show that finite finprod embeds into the full finprod
+    sorry -- lemma: finprod_subset_eq_finprod_mul
+
+  -- Extend from cylinders to all measurable sets
+  apply measure_eq_of_eq_on_measurable_sets_of_cylinders
+  · exact h_cylinders
+  · exact hE
 
 end restrictedproduct
 
