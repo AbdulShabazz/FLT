@@ -1193,3 +1193,5 @@ end restrictedproduct
 end Pi
 end HaarChar
 end MeasureTheory
+
+-- Notes: v2 has the minimal Mathlib library
