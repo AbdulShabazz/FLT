@@ -400,20 +400,16 @@ lemma mulEquivHaarChar_piCongrRight [Fintype ι] (ψ : Π i, (H i) ≃ₜ* (H i)
 
 @[to_additive]
 lemma mulEquivHaarChar_piCongrRight_compactCase [Fintype ι]
-  [∀ i, CompactSpace (H i)]
-  [∀ i, T2Space (H i)]
-  [∀ i, Nonempty (H i)] (ψ : Π i, (H i) ≃ₜ* (H i)) :
+  [∀ i, CompactSpace (H i)] (ψ : Π i, (H i) ≃ₜ* (H i)) :
     letI : MeasurableSpace (Π i, H i) := borel _
     haveI : BorelSpace (Π i, H i) := ⟨rfl⟩
     mulEquivHaarChar (ContinuousMulEquiv.piCongrRight ψ) = ∏ i, mulEquivHaarChar (ψ i) := by
   letI : MeasurableSpace (∀ i, H i) := borel _
   haveI : BorelSpace (∀ i, H i) := BorelSpace.mk rfl
   -- Manually build the instances for the product space
-  haveI : T2Space (∀ i, H i) := Pi.t2Space
   haveI : LocallyCompactSpace (∀ i, H i) := by
     haveI : ∀ i, LocallyCompactSpace (H i) := fun i => inferInstance
     exact Pi.locallyCompactSpace
-  haveI : Nonempty (∀ i, H i) := inferInstance
   -- Key observation: each component has Haar character 1
   have h_comp : ∀ i, mulEquivHaarChar (ψ i) = 1 := fun i =>
     mulEquivHaarChar_eq_one_of_compactSpace (ψ i)
