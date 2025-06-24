@@ -199,7 +199,7 @@ library_note "Uniqueness of Haar measure"
 a fundamental result in the theory of Haar measures. -/
 
 -- Haar measures on locally compact groups are regular
-@[to_additive IsAddHaarMeasure.regular]
+@[nolint simpNF, to_additive (attr := simp) IsAddHaarMeasure.regular]
 lemma IsHaarMeasure.regular [BorelSpace G] [Nonempty G]
   [LocallyCompactSpace G] [IsTopologicalGroup G]
     (μ : Measure G) [IsHaarMeasure μ] : Regular μ := by
