@@ -1,5 +1,6 @@
 --import Mathlib.MeasureTheory.Measure.Haar.Unique
 import FLT.Mathlib.Topology.Algebra.RestrictedProduct
+import Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 import FLT.Mathlib.MeasureTheory.Measure.Regular
 import FLT.Mathlib.MeasureTheory.Group.Measure
 import FLT.Mathlib.MeasureTheory.Group.Haar
@@ -161,7 +162,7 @@ variable {G : Type*} [Group G] [TopologicalSpace G] [MeasurableSpace G]
 @[to_additive]
 lemma IsHaarMeasure.nnreal_smul {μ : Measure G}
     [h : IsHaarMeasure μ] {c : ℝ≥0} (hc : 0 < c) : IsHaarMeasure (c • μ) :=
-  h.smul _ (by simp [hc.ne']) (not_eq_of_beq_eq_false rfl) -- beq??
+  h.smul _ (by simp [hc.ne']) (Option.some_ne_none _)
 
 variable [BorelSpace G] [IsTopologicalGroup G] [LocallyCompactSpace G]
 /-- If `φ : G ≃ₜ* G` then `mulEquivHaarChar φ` is the positive real factor by which
@@ -176,12 +177,12 @@ lemma mulEquivHaarChar_pos (φ : G ≃ₜ* G) : 0 < mulEquivHaarChar φ :=
 
 -- should be in haarScalarFactor API
 @[to_additive]
-lemma smul_haarScalarFactor_smul (μ' μ : Measure G)
+lemma mul_haarScalarFactor_smul (μ' μ : Measure G)
     [IsHaarMeasure μ] [IsFiniteMeasureOnCompacts μ'] [IsMulLeftInvariant μ'] {c : ℝ≥0}
     (hc : 0 < c) :
-    letI : IsHaarMeasure (c • μ) := IsHaarMeasure.nnreal_smul hc
+    haveI : IsHaarMeasure (c • μ) := IsHaarMeasure.nnreal_smul hc
     c * haarScalarFactor μ' (c • μ) = haarScalarFactor μ' μ := by
-  letI : IsHaarMeasure (c • μ) := IsHaarMeasure.nnreal_smul hc
+  haveI : IsHaarMeasure (c • μ) := IsHaarMeasure.nnreal_smul hc
   obtain ⟨⟨g, g_cont⟩, g_comp, g_nonneg, g_one⟩ :
     ∃ g : C(G, ℝ), HasCompactSupport g ∧ 0 ≤ g ∧ g 1 ≠ 0 := exists_continuous_nonneg_pos 1
   have int_g_ne_zero : ∫ x, g x ∂μ ≠ 0 :=
@@ -199,12 +200,13 @@ lemma smul_haarScalarFactor_smul (μ' μ : Measure G)
 
 -- should be in haarScalarFactor API
 @[to_additive]
-lemma smul_haarScalarFactor_smul' (μ' μ : Measure G)
+lemma haarScalarFactor_smul_smul (μ' μ : Measure G)
     [IsHaarMeasure μ] [IsFiniteMeasureOnCompacts μ'] [IsMulLeftInvariant μ'] {c : ℝ≥0}
     (hc : 0 < c) :
-    letI : IsHaarMeasure (c • μ) := IsHaarMeasure.nnreal_smul hc
+    haveI : IsHaarMeasure (c • μ) := IsHaarMeasure.nnreal_smul hc
     haarScalarFactor (c • μ') (c • μ) = haarScalarFactor μ' μ := by
-  rw [haarScalarFactor_smul, smul_eq_mul, smul_haarScalarFactor_smul _ _ hc]
+  rw [haarScalarFactor_smul, smul_eq_mul, mul_haarScalarFactor_smul _ _ hc]
+
 -- should be in haarScalarFactor API
 @[to_additive]
 lemma haarScalarFactor_map (μ' μ : Measure G) [IsHaarMeasure μ] [IsHaarMeasure μ'] (φ : G ≃ₜ* G) :
@@ -235,7 +237,8 @@ lemma mulEquivHaarChar_eq (μ : Measure G) [IsHaarMeasure μ]
     enter [1, 2, 2]
     rw [smul]
   simp_rw [MeasureTheory.Measure.map_smul]
-  exact smul_haarScalarFactor_smul' _ _ (haarScalarFactor_pos_of_isHaarMeasure haar μ)
+  exact haarScalarFactor_smul_smul _ _ (haarScalarFactor_pos_of_isHaarMeasure haar μ)
+
 @[to_additive]
 lemma mulEquivHaarChar_map (μ : Measure G)
     [IsHaarMeasure μ] [Regular μ] (φ : G ≃ₜ* G) :
