@@ -1,12 +1,15 @@
---import Mathlib.MeasureTheory.Measure.Haar.Unique
---import FLT.Mathlib.Topology.Algebra.RestrictedProduct
---import Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
+import Mathlib.MeasureTheory.Measure.Haar.Unique
+import FLT.Mathlib.Topology.Algebra.RestrictedProduct.Basic
+import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 import FLT.Mathlib.MeasureTheory.Measure.Regular
 import FLT.Mathlib.MeasureTheory.Group.Measure
 import FLT.Mathlib.MeasureTheory.Group.Haar
 import FLT.Mathlib.MeasureTheory.Measure.Pi
 import FLT.Mathlib.Topology.Algebra.Group
 import FLT.Mathlib.Topology.Algebra.Pi
+
+import Mathlib.Topology.Algebra.RestrictedProduct
+
 --import Mathlib.Data.Finset.Basic
 
 import Mathlib.Topology.Basic
