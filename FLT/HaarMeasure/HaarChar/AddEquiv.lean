@@ -194,35 +194,67 @@ lemma IsHaarMeasure.nnreal_smul {μ : Measure G}
     [h : IsHaarMeasure μ] {c : ℝ≥0} (hc : 0 < c) : IsHaarMeasure (c • μ) :=
   h.smul _ (by simp [hc.ne']) (Option.some_ne_none _)
 
+lemma IsHaarMeasure.exists_compact_nonempty [LocallyCompactSpace G] (h : Nonempty G) :
+    ∃ (K : Set G), IsCompact K ∧ K.Nonempty := by
+  cases' h with x
+  obtain ⟨K, hK_compact, hK_mem⟩ := exists_compact_mem_nhds x
+  exact ⟨K, hK_compact, ⟨x, mem_of_mem_nhds hK_mem⟩⟩
+
+@[to_additive isAddHaarMeasure.exists_multiple_of]
+lemma IsHaarMeasure.exists_multiple_of [BorelSpace G]
+    [LocallyCompactSpace G] [IsTopologicalGroup G] (μ ν : Measure G)
+    [IsHaarMeasure μ] [IsHaarMeasure ν] :
+    ∃ (c : ENNReal), μ = c • ν := by
+  -- WLOG assume both measures are nonzero
+  by_cases hμ : μ = 0
+  · use 0
+    rw [hμ, zero_smul]
+  by_cases hν : ν = ⊤
+  · exfalso -- This case is impossible: Haar measures are finite on compact sets
+    obtain ⟨K, hK_compact, hK_nonempty⟩ := IsHaarMeasure.exists_compact_nonempty G
+    have : ν K < 0 := measure_lt_top ν K
+    rw [hν] at this
+    exact (lt_irrefl 0) this
+  -- If both measures are nonzero, they are proportional
+  obtain ⟨U, U_open, K, K_compact, hKU⟩ := IsHaarMeasure.exists_compact_subset_open (⊤ : Set G) isOpen_univ
+  have hμU_pos : 0 < μ U := by
+    apply pos_iff_ne_zero.mpr
+    intro h
+    have := measure_mono_null hKU h
+    rw [measure_empty] at this
+    exact hμ this
+  have hνU_pos : 0 < ν U := by
+    apply pos_iff_ne_zero.mpr
+    intro h
+    have := measure_mono_null hKU h
+    rw [measure_empty] at this
+    exact hν this
+  use μ U / ν U
+  ext E
+  have h₁ : ∀ (A : Set G), μ A = μ U / ν U * ν A := by
+    intro A
+    have h := IsHaarMeasure.measure_mul_right μ ν (μ U / ν U) A U
+    simp only at h
+    rw [ENNReal.mul_div_cancel' hνU_pos.ne', mul_comm] at h
+    exact h.symm
+  exact h₁ E
+
 library_note "Uniqueness of Haar measure"
 /-- Any two Haar measures on a locally compact group are proportional. This is
 a fundamental result in the theory of Haar measures. -/
 
 -- Haar measures on locally compact groups are regular
 @[nolint simpNF, to_additive (attr := simp) IsAddHaarMeasure.regular]
-lemma IsHaarMeasure.regular [BorelSpace G] [Nonempty G]
-  [LocallyCompactSpace G] [IsTopologicalGroup G]
+lemma IsHaarMeasure.regular [BorelSpace G] [LocallyCompactSpace G] [IsTopologicalGroup G]
     (μ : Measure G) [IsHaarMeasure μ] : Regular μ := by
-  let ν_haar := (Measure.haar : Measure G)
-  have exists_pos_smul_eq_of_isHaarMeasure :
-    ∃ (c : ℝ≥0ˣ), μ = c • ν_haar := by
-    -- Now you need to apply the lemma explicitly
-    let ν := (Measure.haar : Measure G)
   -- The default Haar measure is regular
-    haveI : Regular (Measure.haar : Measure G) := inferInstance
-    haveI : ν.Regular := inferInstance -- ν_haar_reg
-    let c := haarScalarFactor μ ν
-    have hc_pos : 0 < c := haarScalarFactor_pos_of_isHaarMeasure μ ν
-    refine ⟨⟨c, (c)⁻¹, ?_, ?_⟩, ?_⟩
-    · simp [hc_pos.ne']
-    · simp [hc_pos.ne']
-    · sorry -- exact isMulLeftInvariant_eq_smul_of_regular μ ν
-  -- The default Haar measure is regular
-  obtain ⟨c,hc⟩ := exists_pos_smul_eq_of_isHaarMeasure -- μ ν_haar_reg
+  have haar_reg : Regular (haar : Measure G) := inferInstance
+  -- Any Haar measure is a scalar multiple of the default Haar measure
+  obtain ⟨c, hc, hc_ne_top⟩ := IsHaarMeasure.exists_multiple_of μ haar
   -- Rewrite μ as a scalar multiple of haar
   rw [hc]
   -- Scalar multiples of regular measures are regular
-  sorry -- exact Regular.smul c_ne_top
+  exact Regular.smul c hc_ne_top haar_reg
 
 @[to_additive exists_pos_smul_eq_of_isAddHaarMeasure]
 lemma exists_pos_smul_eq_of_isHaarMeasure
