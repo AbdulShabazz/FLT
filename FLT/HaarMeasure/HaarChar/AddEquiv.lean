@@ -229,9 +229,10 @@ lemma IsHaarMeasure.exists_mem_nhds_isCompact_subset
 
 lemma IsHaarMeasure.exists_compact_nonempty [LocallyCompactSpace G] (h : Nonempty G) :
     ∃ (K : Set G), IsCompact K ∧ K.Nonempty := by
-  cases' h with x
-  obtain ⟨K, hK_compact, hK_mem⟩ := exists_compact_mem_nhds x
-  exact ⟨K, hK_compact, ⟨x, mem_of_mem_nhds hK_mem⟩⟩
+  cases h with
+  | intro x =>
+    obtain ⟨K, hK_compact, hK_mem⟩ := exists_compact_mem_nhds x
+    exact ⟨K, hK_compact, ⟨x, mem_of_mem_nhds hK_mem⟩⟩
 
 @[to_additive isAddHaarMeasure.exists_multiple_of]
 lemma IsHaarMeasure.exists_multiple_of [BorelSpace G]
