@@ -206,42 +206,28 @@ lemma IsHaarMeasure.nnreal_smul {μ : Measure G}
     [h : IsHaarMeasure μ] {c : ℝ≥0} (hc : 0 < c) : IsHaarMeasure (c • μ) :=
   h.smul _ (by simp [hc.ne']) (Option.some_ne_none _)
 
-lemma IsHaarMeasure.exists_compact_subset_open {X : Type*} [TopologicalSpace X]
-    [LocallyCompactSpace X] [T2Space X]
-    (U : Set X) (hU : IsOpen U) (hU_ne : U.Nonempty) :
-    ∃ (K : Set X) (V : Set X), K ⊆ V ∧ K ⊆ U ∧ V ⊆ U ∧ IsCompact K ∧ IsOpen V ∧ Set.Nonempty V := by
-  -- Get a point in U
-  obtain ⟨x, hx⟩ := hU_ne
-  -- In a locally compact Hausdorff space, we can find a compact neighborhood
-  -- contained in any open neighborhood
-  obtain ⟨K, hxK, hK_compact, hKU⟩ := exists_mem_nhds_isCompact_subset hx hU
-  -- Since K is a compact subset of the Hausdorff space, it's closed
-  -- So we can find an open set V with K ⊆ V ⊆ U using regularity
-  have : Disjoint K (Uᶜ) := by
-    rw [Set.disjoint_iff_inter_eq_empty]
-    ext y
-    simp only [Set.mem_inter_iff, Set.mem_compl_iff, Set.mem_empty_iff_false, iff_false]
-    intro ⟨hyK, hyU⟩
-    exact hyU (hKU hyK)
-  -- Use regularity to separate K from Uᶜ
-  obtain ⟨V, W, hV_open, hW_open, hKV, hUcW, hVW⟩ :=
-    SeparatedNhds.disjoint_nhds_nhds this
-  use K, V
-  constructor
-  · exact hKV  -- K ⊆ V
-  constructor
-  · exact hKU  -- K ⊆ U
-  constructor
-  · -- V ⊆ U
-    intro y hy
-    by_contra hyU
-    have : y ∈ W := hUcW (Set.mem_compl hyU)
-    exact (hVW ⟨hy, this⟩).elim
-  constructor
-  · exact hK_compact  -- K is compact
-  constructor
-  · exact hV_open  -- V is open
-  · exact ⟨x, hKV hxK⟩  -- V is nonempty since x ∈ K ⊆ V
+/-
+The notation `𝓝` is shorthand for `nhds`, so you can also write:
+
+"nhds x" instead of "𝓝 x"
+"U ∈ nhds x" instead of "U ∈ 𝓝 x" -/
+
+lemma IsHaarMeasure.exists_mem_nhds_isCompact_subset {X : Type*} [TopologicalSpace X] [LocallyCompactSpace X]
+    {x : X} {U : Set X} (hx : x ∈ U) (hU : IsOpen U) :
+    ∃ (K : Set X), x ∈ K ∧ IsCompact K ∧ K ⊆ U := by
+  -- Get a compact neighborhood of x
+  obtain ⟨K₀, hK₀_compact, hK₀_nhds⟩ := exists_compact_mem_nhds x
+  -- Since K₀ and U are both neighborhoods of x, their intersection is too
+  have : K₀ ∩ U ∈ nhds x := Filter.inter_mem hK₀_nhds (hU.mem_nhds hx)
+  -- Extract an open set V with x ∈ V ⊆ K₀ ∩ U
+  obtain ⟨V, hV_sub, hV_open, hxV⟩ := mem_nhds_iff.mp this
+  -- Take closure of V
+  use closure V
+  refine ⟨?_, ?_, ?_⟩
+  · exact subset_closure hxV
+  · exact hK₀_compact.of_isClosed_subset isClosed_closure
+      (closure_subset.trans (hV_sub.trans (Set.inter_subset_left K₀ U)))
+  · exact closure_subset.trans (hV_sub.trans (Set.inter_subset_right K₀ U))
 
 lemma IsHaarMeasure.exists_compact_nonempty [LocallyCompactSpace G] (h : Nonempty G) :
     ∃ (K : Set G), IsCompact K ∧ K.Nonempty := by
