@@ -206,6 +206,11 @@ lemma IsHaarMeasure.nnreal_smul {μ : Measure G}
     [h : IsHaarMeasure μ] {c : ℝ≥0} (hc : 0 < c) : IsHaarMeasure (c • μ) :=
   h.smul _ (by simp [hc.ne']) (Option.some_ne_none _)
 
+lemma closure_subset {X : Type*} [TopologicalSpace X]
+  {s t : Set X} (h_sub : s ⊆ t) (h_t_closed : IsClosed t) :
+    closure s ⊆ t := by
+  exact closure_minimal h_sub h_t_closed
+
 /-
 The notation `𝓝` is shorthand for `nhds`, so you can also write:
 
