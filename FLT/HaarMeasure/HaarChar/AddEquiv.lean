@@ -206,18 +206,20 @@ lemma IsHaarMeasure.nnreal_smul {μ : Measure G}
     [h : IsHaarMeasure μ] {c : ℝ≥0} (hc : 0 < c) : IsHaarMeasure (c • μ) :=
   h.smul _ (by simp [hc.ne']) (Option.some_ne_none _)
 
+-- `s ⊆ t → closure s ⊆ t` is true only if we assume that "t" is a closed set.
 lemma closure_subset {X : Type*} [TopologicalSpace X]
   {s t : Set X} (h_sub : s ⊆ t) (h_t_closed : IsClosed t) :
     closure s ⊆ t := by
   exact closure_minimal h_sub h_t_closed
 
 /-
-The notation `𝓝` is shorthand for `nhds`, so you can also write:
+The notation `𝓝` is shorthand for `nhds`, so we can also write:
 
 "nhds x" instead of "𝓝 x"
 "U ∈ nhds x" instead of "U ∈ 𝓝 x" -/
 
-lemma IsHaarMeasure.exists_mem_nhds_isCompact_subset {X : Type*} [TopologicalSpace X] [LocallyCompactSpace X]
+lemma IsHaarMeasure.exists_mem_nhds_isCompact_subset {X : Type*}
+  [TopologicalSpace X] [LocallyCompactSpace X] [T2Space X]
     {x : X} {U : Set X} (hx : x ∈ U) (hU : IsOpen U) :
     ∃ (K : Set X), x ∈ K ∧ IsCompact K ∧ K ⊆ U := by
   -- Get a compact neighborhood of x
@@ -230,9 +232,18 @@ lemma IsHaarMeasure.exists_mem_nhds_isCompact_subset {X : Type*} [TopologicalSpa
   use closure V
   refine ⟨?_, ?_, ?_⟩
   · exact subset_closure hxV
-  · exact hK₀_compact.of_isClosed_subset isClosed_closure
-      (closure_subset.trans (hV_sub.trans (Set.inter_subset_left K₀ U)))
-  · exact closure_subset.trans (hV_sub.trans (Set.inter_subset_right K₀ U))
+  · -- closure V is compact: it's a closed subset of compact K₀
+    apply hK₀_compact.of_isClosed_subset isClosed_closure
+    -- Need: closure V ⊆ K₀
+    calc closure V ⊆ closure (K₀ ∩ U) := closure_mono hV_sub
+         _ ⊆ closure K₀ ∩ closure U := closure_inter_subset_inter_closure K₀ U
+         _ ⊆ K₀ ∩ closure U := by simp [hK₀_compact.isClosed.closure_eq]
+         _ ⊆ K₀ := Set.inter_subset_left
+  · -- closure V ⊆ U: use that V ⊆ U and U is open
+    -- Key insight: closure V ⊆ U because V ⊆ U and U is open
+    have hVU : V ⊆ U := hV_sub.trans Set.inter_subset_right
+    rw [← hU.closure_eq] -- Since U is open, closure U = U
+    exact closure_mono (hV_sub.trans (Set.inter_subset_right K₀ U))
 
 lemma IsHaarMeasure.exists_compact_nonempty [LocallyCompactSpace G] (h : Nonempty G) :
     ∃ (K : Set G), IsCompact K ∧ K.Nonempty := by
