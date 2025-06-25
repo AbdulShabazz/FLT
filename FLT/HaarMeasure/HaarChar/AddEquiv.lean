@@ -194,6 +194,26 @@ lemma IsHaarMeasure.nnreal_smul {μ : Measure G}
     [h : IsHaarMeasure μ] {c : ℝ≥0} (hc : 0 < c) : IsHaarMeasure (c • μ) :=
   h.smul _ (by simp [hc.ne']) (Option.some_ne_none _)
 
+lemma IsHaarMeasure.exists_compact_subset_open {X : Type*} [TopologicalSpace X]
+    [LocallyCompactSpace X] [T2Space X]
+    (U : Set X) (hU : IsOpen U) (hU_ne : U.Nonempty) :
+    ∃ (K : Set X) (V : Set X), K ⊆ V ∧ K ⊆ U ∧ V ⊆ U ∧ IsCompact K ∧ IsOpen V ∧ Set.Nonempty V := by
+  -- Get a point in U
+  obtain ⟨x, hx⟩ := hU_ne
+  -- Use local compactness at x
+  have : U ∈ nhds x := hU.mem_nhds hx
+  obtain ⟨K, hK_compact, hK_nhds⟩ := exists_compact_mem_nhds x
+  -- Get an open set V with x ∈ V ⊆ K ∩ U
+  obtain ⟨V, hV_sub, hV_open, hxV⟩ := mem_nhds_iff.mp this
+  use K ∩ U, V
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact hV_sub                                     -- V ⊆ K ∩ U
+  · exact Set.inter_subset_right _ _                 -- K ∩ U ⊆ U
+  · exact hV_sub.trans (Set.inter_subset_right _ _) -- V ⊆ U
+  · exact hK_compact.inter_left hU                   -- K ∩ U is compact
+  · exact hV_open                                    -- V is open
+  · exact ⟨x, hxV⟩                                  -- V is nonempty                               -- V is nonempty
+
 lemma IsHaarMeasure.exists_compact_nonempty [LocallyCompactSpace G] (h : Nonempty G) :
     ∃ (K : Set G), IsCompact K ∧ K.Nonempty := by
   cases' h with x
