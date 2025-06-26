@@ -1578,30 +1578,23 @@ lemma mulEquivHaarChar_piCongrRight [Fintype ι] (ψ : Π i, (H i) ≃ₜ* (H i)
     mulEquivHaarChar (ContinuousMulEquiv.piCongrRight ψ) = ∏ i, mulEquivHaarChar (ψ i) := by
   sorry -- FLT#521 -- induction on size of ι
 
-@[to_additive]
-lemma mulEquivHaarChar_piCongrRight_compactCase [Fintype ι]
+@[simp]
+lemma mulEquivHaarChar_piCongrRight_compactCase [Fintype ι] [∀ i, T2Space (H i)]
   [∀ i, CompactSpace (H i)] (ψ : Π i, (H i) ≃ₜ* (H i)) :
     letI : MeasurableSpace (Π i, H i) := borel _
     haveI : BorelSpace (Π i, H i) := ⟨rfl⟩
     mulEquivHaarChar (ContinuousMulEquiv.piCongrRight ψ) = ∏ i, mulEquivHaarChar (ψ i) := by
+  -- Set up instances
   letI : MeasurableSpace (∀ i, H i) := borel _
-  haveI : BorelSpace (∀ i, H i) := BorelSpace.mk rfl
-  -- Manually build the instances for the product space
-  haveI : LocallyCompactSpace (∀ i, H i) := by
-    haveI : ∀ i, LocallyCompactSpace (H i) := fun i => inferInstance
-    exact Pi.locallyCompactSpace
-  -- Key observation: each component has Haar character 1
-  have h_comp : ∀ i, mulEquivHaarChar (ψ i) = 1 := fun i =>
-    mulEquivHaarChar_eq_one_of_compactSpace (ψ i)
-
-  -- So the product is 1
-  simp [h_comp, Finset.prod_eq_one]
-
-  -- And the product space is also compact
+  haveI : BorelSpace (∀ i, H i) := ⟨rfl⟩
   haveI : CompactSpace (∀ i, H i) := Pi.compactSpace
 
-  -- So its Haar character is also 1
-  exact mulEquivHaarChar_eq_one_of_compactSpace _
+  -- Both sides equal 1
+  have h_comp : ∀ i, mulEquivHaarChar (ψ i) = 1 :=
+    fun i => mulEquivHaarChar_eq_one_of_compactSpace (ψ i)
+
+  rw [mulEquivHaarChar_eq_one_of_compactSpace]
+  simp [h_comp]
 
 end HaarProductCharacter
 
