@@ -1570,13 +1570,39 @@ theorem exists_isHaarMeasure_eq_smul_isHaarMeasure [Group G] [TopologicalSpace G
   ∃ (c : ℝ≥0ˣ), μ = c • ν := by
   exact IsHaarMeasure.exists_unique_smul_eq μ ν
 
+-- FLT#521 -- induction on size of ι
 @[to_additive "The Haar character of a product of topological group automorphisms
     equals the product of individual Haar characters."]
-lemma mulEquivHaarChar_piCongrRight [Fintype ι] (ψ : Π i, (H i) ≃ₜ* (H i)) :
+lemma mulEquivHaarChar_piCongrRight [Fintype ι] [∀ i, T2Space (H i)]
+  (ψ : Π i, (H i) ≃ₜ* (H i)) :
     letI : MeasurableSpace (Π i, H i) := borel _
     haveI : BorelSpace (Π i, H i) := ⟨rfl⟩
     mulEquivHaarChar (ContinuousMulEquiv.piCongrRight ψ) = ∏ i, mulEquivHaarChar (ψ i) := by
-  sorry -- FLT#521 -- induction on size of ι
+  -- Set up instances
+  letI : MeasurableSpace (∀ i, H i) := borel _
+  haveI : BorelSpace (∀ i, H i) := ⟨rfl⟩
+  -- Let ν be the product of the Haar measures on the component spaces.
+  let ν : Measure (∀ i, H i) := Measure.pi fun i ↦ haarMeasure (H i)
+  -- We must establish that ν is a valid Haar measure on the product space.
+  haveI : IsHaarMeasure ν := Measure.pi.isHaarMeasure
+  -- The strategem is to first prove the key lemma `map_haar_pi` inline.
+  -- This lemma computes the pushforward of the product measure `ν` under the map.
+  have map_haar_pi_eq_smul :
+      Measure.map (ContinuousMulEquiv.piCongrRight ψ) ν = (∏ i, mulEquivHaarChar (ψ i)) • ν := by
+    -- The pushforward of a product measure under a component-wise map
+    -- is the product of the pushforwards of the component measures.
+    rw [Measure.map_pi]
+    -- For each component, apply the definition of its Haar character.
+    simp_rw [mulEquivHaarChar_spec]
+    -- The product of scaled measures is the same as the product of scalars
+    -- scaling the product measure.
+    rw [Measure.pi_smul_pi]
+  -- The definition of `mulEquivHaarChar` says it is the unique scalar `c` such that
+  -- `map φ μ = c • μ` for *any* Haar measure `μ`.
+  -- Since we have just shown this equality holds for the Haar measure `ν` with the
+  -- scalar `∏ i, mulEquivHaarChar (ψ i)`, this product of scalars *must* be the
+  -- Haar character of the product map. The lemma for this is `mulEquivHaarChar_eq_of_map_eq_smul`.
+  exact mulEquivHaarChar_eq_of_map_eq_smul ν map_haar_pi_eq_smul
 
 @[to_additive (attr:=simp) "In the compact case,
   the Haar character of a product of topological group
