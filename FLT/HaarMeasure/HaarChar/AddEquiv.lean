@@ -1389,6 +1389,12 @@ lemma ennreal_prod_coe {α : Type*} [Fintype α] (f : α → ℝ≥0) :
     ↑(∏ i, f i) = (∏ i, (f i : ENNReal)) := by
   simp [ENNReal.coe_finset_prod]
 
+--Instead of generic simp_pi_decomp, consider:
+-- More specific tactic for scalar products
+macro "pi_scalar_rw" : tactic => `(tactic|
+  simp only [Finset.prod_bij, mulEquivHaarChar_trans,
+             mulEquivHaarChar_refl, one_mul])
+
 /-- This lemma deals with the `Measure.map` of a product Haar measure under
     a continuous multiplicative equivalence. The goal is to show
     that this pushforward measure is equal to a scalar multiple
@@ -1398,12 +1404,11 @@ lemma ennreal_prod_coe {α : Type*} [Fintype α] (f : α → ℝ≥0) :
     import Mathlib.MeasureTheory.MeasureTheory.HaarChar.Pi.map_addHaar_pi -/
 @[to_additive "Pushforward of the product Haar measure under a componentwise automorphism
     multiplies by the product of scalar factors."]
-theorem map_haar_pi [Fintype ι] (ψ : ∀ i, (H i) ≃ₜ* (H i)) :
+theorem map_haar_pi [Fintype ι] [∀ i, Regular (haar : Measure (H i))] (ψ : ∀ i, (H i) ≃ₜ* (H i)) :
     Measure.map (ContinuousMulEquiv.piCongrRight ψ)
       (Measure.pi fun i ↦ haar) =
     (∏ i, mulEquivHaarChar (ψ i)) •
       Measure.pi fun i ↦ haar := by
-  -- Work with a general statement
   suffices ∀ n, ∀ (ι : Type u) [Fintype ι], Fintype.card ι = n →
     ∀ (H : ι → Type v) [∀ i, Group (H i)] [∀ i, TopologicalSpace (H i)]
     [∀ i, IsTopologicalGroup (H i)] [∀ i, LocallyCompactSpace (H i)]
