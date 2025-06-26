@@ -1634,6 +1634,7 @@ lemma pi_borel_eq_borel_pi [Fintype ι] [∀ i, TopologicalSpace (H i)] :
 -- FLT#521 -- induction on size of ι
 @[simp]
 lemma mulEquivHaarChar_piCongrRight [Fintype ι] [∀ i, T2Space (H i)]
+  [∀ i, Regular (haar : Measure (H i))]
   (ψ : Π i, (H i) ≃ₜ* (H i)) :
     letI : MeasurableSpace (Π i, H i) := borel _
     haveI : BorelSpace (Π i, H i) := ⟨rfl⟩
@@ -1643,8 +1644,9 @@ lemma mulEquivHaarChar_piCongrRight [Fintype ι] [∀ i, T2Space (H i)]
   haveI : BorelSpace (∀ i, H i) := ⟨rfl⟩
 
   -- Convert between borel and pi structures for the measure
-  have h_eq : (borel (∀ i, H i) : MeasurableSpace (∀ i, H i)) = @MeasurableSpace.pi ι H (fun i ↦ borel (H i)) := by
-    exact pi_borel_eq_borel_pi
+  have h_eq : (borel (∀ i, H i) : MeasurableSpace (∀ i, H i))
+    = @MeasurableSpace.pi ι H (fun i ↦ borel (H i)) := by
+      exact pi_borel_eq_borel_pi
 
   -- Create the product measure on the pi structure and transport it
   let ν₀ : @Measure (∀ i, H i) (@MeasurableSpace.pi ι H (fun i ↦ borel (H i))) :=
