@@ -1649,8 +1649,7 @@ lemma mulEquivHaarChar_piCongrRight [Fintype ι] [∀ i, T2Space (H i)]
       exact pi_borel_eq_borel_pi
 
   -- Create the product measure on the pi structure and transport it
-  let ν₀ : @Measure (∀ i, H i) (@MeasurableSpace.pi ι H (fun i ↦ borel (H i))) :=
-    Measure.pi (fun i ↦ haarMeasure (H i))
+  let ν₀ : Measure (∀ i, H i) := Measure.haar
   let ν : Measure (∀ i, H i) := cast (congr_arg Measure h_eq) ν₀
 
   -- Establish that ν is a valid Haar measure
