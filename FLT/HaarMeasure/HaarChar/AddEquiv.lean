@@ -1578,7 +1578,9 @@ lemma mulEquivHaarChar_piCongrRight [Fintype ι] (ψ : Π i, (H i) ≃ₜ* (H i)
     mulEquivHaarChar (ContinuousMulEquiv.piCongrRight ψ) = ∏ i, mulEquivHaarChar (ψ i) := by
   sorry -- FLT#521 -- induction on size of ι
 
-@[simp]
+@[to_additive (attr:=simp) "In the compact case,
+  the Haar character of a product of topological group
+    automorphisms equals the product of individual Haar characters (which all equal 1)."]
 lemma mulEquivHaarChar_piCongrRight_compactCase [Fintype ι] [∀ i, T2Space (H i)]
   [∀ i, CompactSpace (H i)] (ψ : Π i, (H i) ≃ₜ* (H i)) :
     letI : MeasurableSpace (Π i, H i) := borel _
