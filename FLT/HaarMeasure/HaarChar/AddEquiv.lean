@@ -1645,6 +1645,37 @@ def pi_borel_equiv : (∀ i, H i) ≃ᵐ (∀ i, H i) where
   left_inv := fun _ ↦ rfl
   right_inv := fun _ ↦ rfl
 
+variable [Fintype ι]
+variable [BorelSpace (∀ i, H i)]  -- or use letI to create it
+
+-- For normalized Haar measures
+variable (K₀ : ∀ i, TopologicalSpace.PositiveCompacts (H i))
+
+instance Pi.finiteDimensional {ι : Type*} {K : Type*} {E : ι → Type*}
+  [Fintype ι] [Field K]
+  [∀ i, AddCommGroup (E i)] [∀ i, Module K (E i)]
+  [∀ i, FiniteDimensional K (E i)] :
+  FiniteDimensional K (∀ i, E i) := by
+  -- Proof that finite product of finite-dimensional spaces is finite-dimensional
+  classical
+  rw [finiteDimensional_iff_finrank_eq_succ_pred]
+  have : FiniteDimensional.finrank K (∀ i, E i) =
+    ∑ i, FiniteDimensional.finrank K (E i) := by
+    exact finrank_pi
+  rw [this]
+  exact Finset.sum_lt_top (fun i _ ↦ finrank_lt_top K (E i))
+
+-- For positive compacts on product spaces
+instance Pi.positiveCompacts [Fintype ι] [∀ i, CompactSpace (H i)] :
+  Nonempty (TopologicalSpace.PositiveCompacts (∀ i, H i)) := by
+    use ⟨Set.univ, isCompact_univ, Set.univ_nonempty⟩
+
+/- Let's formalize the idea that ν₀ and ν_pi are related
+   through a scalar multiple due to the uniqueness properties
+   of Haar measures. -/
+noncomputable def ν₀_ : Measure ((i : ι) → H i) := haarMeasure (Pi.finiteDimensional ι H)
+noncomputable def ν_pi_ : Measure ((i : ι) → H i) := Measure.pi (fun i ↦ haarMeasure (H i))
+
 -- FLT#521 -- induction on size of ι
 @[simp]
 lemma mulEquivHaarChar_piCongrRight [Fintype ι] [∀ i, T2Space (H i)]
@@ -1653,6 +1684,7 @@ lemma mulEquivHaarChar_piCongrRight [Fintype ι] [∀ i, T2Space (H i)]
     letI : MeasurableSpace (Π i, H i) := borel _
     haveI : BorelSpace (Π i, H i) := ⟨rfl⟩
     mulEquivHaarChar (ContinuousMulEquiv.piCongrRight ψ) = ∏ i, mulEquivHaarChar (ψ i) := by
+
   -- Set up instances for the borel structure
   letI : MeasurableSpace (∀ i, H i) := borel _
   haveI : BorelSpace (∀ i, H i) := ⟨rfl⟩
