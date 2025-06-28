@@ -1683,13 +1683,12 @@ instance Pi.positiveCompacts [Fintype ι] [∀ i, CompactSpace (H i)] :
 /- Let's formalize the idea that ν₀ and ν_pi are related
    through a scalar multiple due to the uniqueness properties
    of Haar measures. -/
-noncomputable def ν₀ : Measure (∀ i, H i) := haar
 
-noncomputable def ν_pi : Measure (∀ i, H i) :=
-  pi_borel_eq_borel_pi ▸ Measure.pi (fun i ↦ haar)
+noncomputable def ν₀ : Measure (∀ i, H i) := haar
+noncomputable def ν_pi : Measure (∀ i, H i) := pi_borel_eq_borel_pi ▸ Measure.pi (fun i ↦ haar)
 
 /-
-Then `ν₀ = ν_pi` by
+Then, `ν₀ = ν_pi` by
 
 `haar_eq_pi_haar` [Fintype ι] [∀ i, Regular (haar : Measure (H i))]
 
@@ -1714,8 +1713,7 @@ lemma mulEquivHaarChar_piCongrRight [Fintype ι] [∀ i, T2Space (H i)]
 
   -- Convert between borel and pi structures for the measure
   have h_eq : (borel (∀ i, H i) : MeasurableSpace (∀ i, H i))
-    = @MeasurableSpace.pi ι H (fun i ↦ borel (H i)) := by
-      exact pi_borel_eq_borel_pi
+    = @MeasurableSpace.pi ι H (fun i ↦ borel (H i)) := pi_borel_eq_borel_pi
 
   -- Create the measure on MeasurableSpace.pi
   let ν_pi : @Measure (∀ i, H i) MeasurableSpace.pi :=
@@ -1725,6 +1723,11 @@ lemma mulEquivHaarChar_piCongrRight [Fintype ι] [∀ i, T2Space (H i)]
   let ν₀ : Measure (∀ i, H i) := Measure.haar
   let ν : Measure (∀ i, H i) :=
     pi_borel_eq_borel_pi ▸ Measure.pi (fun i ↦ Measure.haar)
+
+  -- At this point you'll have (haar : Measure (∀ i, H i))
+  -- and need to work with Measure.pi
+  -- This is where you apply haar_eq_pi_haar:
+  rw [haar_eq_pi_haar]
 
   -- Establish that ν is a valid Haar measure
   haveI : ∀ i, MeasurableMul (H i) := fun i ↦ inferInstance
