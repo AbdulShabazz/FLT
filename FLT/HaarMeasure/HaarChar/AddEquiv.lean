@@ -1632,6 +1632,16 @@ lemma pi_borel_eq_borel_pi [Fintype ι] [∀ i, TopologicalSpace (H i)] :
     -- So it's in the borel algebra
     exact measurableSet_borel s hs -/
 
+-- Special case where ψ i = id forall i
+lemma haar_eq_pi_haar [Fintype ι] [∀ i, BorelSpace (H i)] [BorelSpace (∀ i, H i)]
+  [∀ i, Regular (haar : Measure (H i))] :
+  (haar : Measure (∀ i, H i)) = pi_borel_eq_borel_pi ▸ Measure.pi (fun i ↦ haar) := by
+  -- Use map_haar_pi with identity homeomorphisms
+  have h := map_haar_pi (fun i ↦ MulEquiv.refl (H i))
+  simp at h
+  -- Should get that the scalar is 1 since mulEquivHaarChar id = 1
+  sorry
+
 -- Define the identity as a measurable equivalence
 def pi_borel_equiv : (∀ i, H i) ≃ᵐ (∀ i, H i) where
   toFun := id
@@ -1673,8 +1683,21 @@ instance Pi.positiveCompacts [Fintype ι] [∀ i, CompactSpace (H i)] :
 /- Let's formalize the idea that ν₀ and ν_pi are related
    through a scalar multiple due to the uniqueness properties
    of Haar measures. -/
-noncomputable def ν₀_ : Measure ((i : ι) → H i) := haarMeasure (Pi.finiteDimensional ι H)
-noncomputable def ν_pi_ : Measure ((i : ι) → H i) := Measure.pi (fun i ↦ haarMeasure (H i))
+noncomputable def ν₀ : Measure (∀ i, H i) := haar
+
+noncomputable def ν_pi : Measure (∀ i, H i) :=
+  pi_borel_eq_borel_pi ▸ Measure.pi (fun i ↦ haar)
+
+/-
+Then `ν₀ = ν_pi` by
+
+`haar_eq_pi_haar` [Fintype ι] [∀ i, Regular (haar : Measure (H i))]
+
+which states
+
+* When ψ i = id, then mulEquivHaarChar (ψ i) = 1
+* So ∏ i, mulEquivHaarChar (ψ i) = 1
+* Therefore haar = 1 • Measure.pi (fun i ↦ haar) = Measure.pi (fun i ↦ haar) -/
 
 -- FLT#521 -- induction on size of ι
 @[simp]
