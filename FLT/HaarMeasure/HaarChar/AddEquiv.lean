@@ -1680,12 +1680,34 @@ instance Pi.positiveCompacts [Fintype ι] [∀ i, CompactSpace (H i)] :
   Nonempty (TopologicalSpace.PositiveCompacts (∀ i, H i)) := by
     use ⟨Set.univ, isCompact_univ, Set.univ_nonempty⟩
 
+lemma haar_eq_pi_haar_explicit [Fintype ι] :
+    (haar : Measure (∀ i, H i)) =
+    @Measure.pi ι H _ _ (fun i => haar) := by
+  -- This states that the Haar measure on the product space
+  -- equals the product of Haar measures on components
+  -- Both sides have type Measure (∀ i, H i) with the same measurable structure
+  sorry
+
+lemma haar_eq_pi_haar_explicit [Fintype ι]
+    [hm : MeasurableSpace (∀ i, H i)]
+    [hb : @BorelSpace (∀ i, H i) _ hm] :
+    @haar (∀ i, H i) _ hm _ _ _ _ =
+    @Measure.pi ι H _ _ (fun i => @haar (H i) _ _ _ _ _ _) := by
+  sorry
+
+lemma pi_borel_eq_borel_pi_explicit {ι : Type u} {H : ι → Type v}
+    [Fintype ι]
+    [∀ i, TopologicalSpace (H i)] :
+    @borel (∀ i, H i) Pi.topologicalSpace =
+    MeasurableSpace.pi := by
+  sorry
+
 /- Let's formalize the idea that ν₀ and ν_pi are related
    through a scalar multiple due to the uniqueness properties
    of Haar measures. -/
 
-noncomputable def ν₀ : Measure (∀ i, H i) := haar
-noncomputable def ν_pi : Measure (∀ i, H i) := pi_borel_eq_borel_pi ▸ Measure.pi (fun i ↦ haar)
+--noncomputable def ν₀ : Measure (∀ i, H i) := haar
+--noncomputable def ν_pi : Measure (∀ i, H i) := pi_borel_eq_borel_pi ▸ Measure.pi (fun i ↦ haar)
 
 /-
 Then, `ν₀ = ν_pi` by
@@ -1722,12 +1744,12 @@ lemma mulEquivHaarChar_piCongrRight [Fintype ι] [∀ i, T2Space (H i)]
   -- Create the product measure on the pi structure and transport it
   let ν₀ : Measure (∀ i, H i) := Measure.haar
   let ν : Measure (∀ i, H i) :=
-    pi_borel_eq_borel_pi ▸ Measure.pi (fun i ↦ Measure.haar)
+    pi_borel_eq_borel_pi_explicit ▸ Measure.pi (fun i ↦ Measure.haar)
 
   -- At this point you'll have (haar : Measure (∀ i, H i))
   -- and need to work with Measure.pi
   -- This is where you apply haar_eq_pi_haar:
-  rw [haar_eq_pi_haar]
+  rw [haar_eq_pi_haar_explicit]
 
   -- Establish that ν is a valid Haar measure
   haveI : ∀ i, MeasurableMul (H i) := fun i ↦ inferInstance
