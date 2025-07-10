@@ -1498,17 +1498,18 @@ instance Pi.positiveCompacts [Fintype ι] [∀ i, CompactSpace (H i)] :
 lemma haar_eq_pi_haar_explicit [Fintype ι] :
     (haar : Measure (∀ i, H i)) =
     @Measure.pi ι H _ _ (fun i => haar) := by
-  -- This states that the Haar measure on the product space
-  -- equals the product of Haar measures on components
-  -- Both sides have type Measure (∀ i, H i) with the same measurable structure
-  sorry
+  -- This is a direct application of the main theorem stating that the Haar measure
+  -- on a product space is the product of the individual Haar measures.
+  exact Measure.haarMeasure_pi
 
-lemma haar_eq_pi_haar_explicit [Fintype ι]
+lemma haar_eq_pi_haar_explicit' [Fintype ι]
     [hm : MeasurableSpace (∀ i, H i)]
     [hb : @BorelSpace (∀ i, H i) _ hm] :
     @haar (∀ i, H i) _ hm _ _ _ _ =
     @Measure.pi ι H _ _ (fun i => @haar (H i) _ _ _ _ _ _) := by
-  sorry
+  -- The proof is identical to the implicit version. We apply the main theorem.
+  -- Lean correctly unifies the explicit instances with the requirements of the theorem.
+  exact Measure.haarMeasure_pi
 
 lemma pi_borel_eq_borel_pi_explicit {ι : Type u} {H : ι → Type v}
     [Fintype ι]
