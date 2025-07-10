@@ -1300,39 +1300,26 @@ private def reindexCongrRight {ι ι' : Type*} (e : ι ≃ ι')
     {H : ι → Type*} [(i : ι) → TopologicalSpace (H i)] [(i : ι) → Group (H i)]
     (ψ : (i : ι) → H i ≃ₜ* H i) :
     ((i : ι) → H i) ≃ₜ* ((i' : ι') → H (e.symm i')) where
-  toMulEquiv := {
-    toFun := fun f i' => ψ (e.symm i') (f (e.symm i'))
-    invFun := fun f i => (ψ i).symm ((Equiv.symm_apply_apply e i) ▸ f (e i))
-    left_inv := by
-      intro f; ext i
-      dsimp
-
-      -- The tactic-based approaches (`simp_rw`, `subst`, `induction` on the main goal) fail
-      -- because of a subtle dependency on `i`. We solve this by proving a more general
-      -- lemma inside this proof, where the dependency is made explicit.
-
-      -- We state a generalized version of our goal as a helper lemma.
-      exact transport_in_equiv_apply_combo e ψ f i i (Equiv.symm_apply_apply e i)
-    right_inv := by
-      sorry
-
-    map_mul' := by
-      intro f g
-      ext i'
-      -- Need to show: ψ (e.symm i') ((f * g) (e.symm i')) =
-      --               ψ (e.symm i') (f (e.symm i')) * ψ (e.symm i') (g (e.symm i'))
-      simp only [Pi.mul_apply]
-      exact map_mul (ψ (e.symm i')) (f (e.symm i')) (g (e.symm i'))
-  }
+  toFun := fun x => (fun i => ψ (e.symm i) (x (e.symm i))) ∘ e
+  invFun := fun y => e.symm ∘ (fun i' => (ψ (e.symm i')).symm (y i'))
+  left_inv := by
+    intro x
+    funext i
+    simp only [Function.comp_apply, Equiv.apply_symm_apply]
+  right_inv := by
+    intro y
+    funext i'
+    simp only [Function.comp_apply, Equiv.symm_apply_apply]
+  map_mul' := by
+    intro x y
+    funext i'
+    simp only [Pi.mul_apply, Function.comp_apply, map_mul]
   continuous_toFun := by
-    apply continuous_pi
-    intro i'
-    exact (ψ (e.symm i')).continuous.comp (continuous_apply _)
+    -- This follows from the fact that piCongrRight and piCongrLeft are continuous
+    exact continuous_pi_iff.mpr fun i' => (map_continuous _).comp (continuous_apply _)
   continuous_invFun := by
-    apply continuous_pi
-    intro i
-
-    refine (ψ i).symm.continuous.comp ?_
+    -- The inverse is also a composition of continuous functions
+    exact continuous_pi_iff.mpr fun i => (map_continuous_symm _).comp (continuous_apply _)
 
     /-
       We need: Continuous (fun f : (i' : ι') → H (e.symm i') =>
