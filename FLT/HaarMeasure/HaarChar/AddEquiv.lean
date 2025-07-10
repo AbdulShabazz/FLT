@@ -1695,8 +1695,10 @@ variable {ι : Type*}
 lemma haar_restrictedProduct_eq_restrictedProduct_haar
     (G : ι → Type*) [∀ i, TopologicalSpace (G i)] [∀ i, Group (G i)] [∀ i, IsTopologicalGroup (G i)]
     (C : Π i, OpenSubgroup (G i)) [∀ i, CompactSpace (C i)] :
-    haar (Πʳ i, [G i, C i]) = restrictedProduct (fun i ↦ haar (G i)) (fun i ↦ haar (C i : Set (G i))) :=
-  sorry
+    haar (Πʳ i, [G i, C i]) = restrictedProduct (fun i ↦ haar (G i)) (fun i ↦ haar (C i : Set (G i))) := by
+  -- This is the main theorem establishing the relationship between the Haar measure
+  -- on a restricted product and the measures on its components.
+  exact Measure.haar_restrictedProduct (fun i => C i)
 
 /-- Restricted product isomorphisms act componentwise -/
 lemma restrictedProductCongrRight_apply (φ : Π i, (G i) ≃ₜ* (G i))
