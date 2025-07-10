@@ -1,6 +1,5 @@
 import FLT.Mathlib.Topology.Algebra.RestrictedProduct.Basic
 import Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
-open RestrictedProduct
 
 open RestrictedProduct
 
