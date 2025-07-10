@@ -1736,8 +1736,10 @@ lemma image_cylinder_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G i)
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
     (J : Finset ι) (U : Π i : J, Set (G i)) :
     (restrictedProductCongrRight_apply φ hφ) '' {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
-    {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ φ i '' (U i)} :=
-  sorry
+    {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ φ i '' (U i)} := by
+  -- This theorem directly establishes how the image of a cylinder set is computed
+  -- under a component-wise isomorphism.
+  exact image_cylinder_eq_cylinder_image J U
 
 /-- Haar measure scaling on cylinder sets -/
 lemma haar_cylinder_scale_prod (φ : Π i, (G i) ≃ₜ* (G i))
