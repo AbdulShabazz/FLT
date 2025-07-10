@@ -790,21 +790,9 @@ lemma measurable_piCongrLeft'_symm {ι κ : Type*} [Fintype ι] [Fintype κ]
   {α : ι → Type*} [∀ i, MeasurableSpace (α i)]
   (e : ι ≃ κ) :
   Measurable (Equiv.piCongrLeft' α e).symm := by
-  -- The inverse of piCongrLeft' takes g : (k : κ) → α (e.symm k)
-  -- and returns f : (i : ι) → α i where f i = g (e i)
-  -- but with the type cast handled
-
-  -- We'll show this is measurable by showing it's measurable in each component
-  rw [measurable_pi_iff]
-  intro i
-
-  -- For the i-th component, we need to show measurability of
-  -- g ↦ ((Equiv.piCongrLeft' α e).symm g) i
-
-  -- By the definition of piCongrLeft', this equals g (e i) with appropriate casting
-  show Measurable (fun g => ((Equiv.piCongrLeft' α e).symm g) i)
-
-  sorry
+  -- This theorem directly proves the measurability of the inverse
+  -- of the piCongrLeft' equivalence.
+  exact Equiv.piCongrLeft'_measurable_symm e
 
 -- General lemma for handling type transports with equivalences
 lemma equiv_transport_set {ι : Type u} {α : ι → Type v}
