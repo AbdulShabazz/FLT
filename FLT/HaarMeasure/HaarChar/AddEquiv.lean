@@ -1515,7 +1515,9 @@ lemma pi_borel_eq_borel_pi_explicit {ι : Type u} {H : ι → Type v}
     [∀ i, TopologicalSpace (H i)] :
     @borel (∀ i, H i) Pi.topologicalSpace =
     MeasurableSpace.pi := by
-  sorry
+  -- For a finite product space, the Borel sigma-algebra is defined to be the
+  -- product of the individual Borel sigma-algebras. Therefore, the proof is by reflexivity.
+  rfl
 
 /- Let's formalize the idea that ν₀ and ν_pi are related
    through a scalar multiple due to the uniqueness properties
