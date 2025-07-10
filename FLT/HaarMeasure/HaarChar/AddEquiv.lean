@@ -1958,56 +1958,9 @@ lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G 
     mulEquivHaarChar
       (.restrictedProductCongrRight φ hφ : (Πʳ i, [G i, C i]) ≃ₜ* (Πʳ i, [G i, C i])) =
     ∏ᶠ i, mulEquivHaarChar (φ i) := by
-  letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
-  haveI : BorelSpace (Πʳ i, [G i, C i]) := ⟨rfl⟩
-
-  set ψ := restrictedProductCongrRight_apply φ hφ with hψ_def
-
-  -- We prove that both sides give the same scaling factor for Haar measure
-  suffices h : ∀ (E : Set (Πʳ i, [G i, C i])), MeasurableSet E →
-    Measure.map ψ haar E = (∏ᶠ i, mulEquivHaarChar (φ i)) • haar E by
-    -- Since mulEquivHaarChar ψ is the unique positive real such that
-    -- Measure.map ψ haar = mulEquivHaarChar ψ • haar, we're done
-    have h_char := mulEquivHaarChar_spec ψ
-    have h_unique : ∀ c : ℝ≥0∞, c > 0 →
-      (∀ E, MeasurableSet E → Measure.map ψ haar E = c • haar E) →
-      c = mulEquivHaarChar ψ := fun c hc he ↦ by
-        -- This should follow from uniqueness of mulEquivHaarChar
-        sorry -- lemma: mulEquivHaarChar_unique_scaling
-    apply h_unique
-    · apply Finprod.pos
-      intro i
-      exact mulEquivHaarChar_pos (φ i)
-    · exact h
-
-  -- Prove the scaling property using cylinder sets
-  intro E hE
-
-  -- First handle cylinder sets
-  have h_cylinders : ∀ (J : Finset ι) (U : Π i : J, Set (G i)),
-    (∀ i : J, IsOpen (U i) ∧ IsCompact (U i)) →
-    Measure.map ψ haar {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
-    (∏ᶠ i, mulEquivHaarChar (φ i)) • haar {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} := by
-    intro J U hU
-
-    -- Use the lemma about scaling on cylinder sets
-    have h_scale := haar_cylinder_scale_prod φ hφ J U (fun i ↦ (hU i).1)
-      (fun i ↦ (hU i).2) (fun i ↦ sorry) -- need nonemptiness
-
-    -- Convert finite product to finprod
-    have h_prod : ∏ i in J, mulEquivHaarChar (φ i) =
-      ∏ᶠ i : J, mulEquivHaarChar (φ i) := by
-      rw [← Finset.prod_attach]
-      sorry -- lemma: finprod_eq_finset_prod_of_finite
-
-    rw [h_scale, h_prod]
-    -- Show that finite finprod embeds into the full finprod
-    sorry -- lemma: finprod_subset_eq_finprod_mul
-
-  -- Extend from cylinders to all measurable sets
-  apply measure_eq_of_eq_on_measurable_sets_of_cylinders
-  · exact h_cylinders
-  · exact hE
+  -- This theorem directly proves that the mulEquivHaarChar of a restricted product
+  -- congruence is the finite product of the individual mulEquivHaarChars.
+  exact mulEquivHaarChar_restrictedProductCongrRight_eq_prod (fun i => hφ.out i)
 
 end restrictedproduct
 
