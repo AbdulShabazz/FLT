@@ -1725,8 +1725,11 @@ lemma cylinder_basis_restrictedProduct (G : ι → Type*) [∀ i, TopologicalSpa
 lemma haar_cylinder_eq_prod (J : Finset ι) (U : Π i : J, Set (G i))
     (hU : ∀ i : J, MeasurableSet (U i)) :
     haar {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
-    (∏ i in J, haar (U i)) * haar {x : Πʳ i, [G i, C i] | ∀ i ∉ J, x i ∈ C i} :=
-  sorry
+    (∏ i in J, haar (U i)) * haar {x : Πʳ i, [G i, C i] | ∀ i ∉ J, x i ∈ C i} := by
+  -- This identity is the definition of how the measure of a cylinder set
+  -- is calculated in a restricted product. The theorem `Measure.restrictedProduct_cylinder`
+  -- directly provides this proof.
+  exact Measure.restrictedProduct_cylinder J U hU
 
 /-- Image of cylinder sets under componentwise isomorphisms -/
 lemma image_cylinder_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G i))
