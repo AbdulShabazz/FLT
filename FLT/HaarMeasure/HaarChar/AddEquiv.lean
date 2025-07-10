@@ -1453,11 +1453,9 @@ lemma pi_borel_eq_borel_pi [Fintype ι] [∀ i, TopologicalSpace (H i)] :
 lemma haar_eq_pi_haar [Fintype ι] [∀ i, BorelSpace (H i)] [BorelSpace (∀ i, H i)]
   [∀ i, Regular (haar : Measure (H i))] :
   (haar : Measure (∀ i, H i)) = pi_borel_eq_borel_pi ▸ Measure.pi (fun i ↦ haar) := by
-  -- Use map_haar_pi with identity homeomorphisms
-  have h := map_haar_pi (fun i ↦ MulEquiv.refl (H i))
-  simp at h
-  -- Should get that the scalar is 1 since mulEquivHaarChar id = 1
-  sorry
+  -- This is the main theorem stating that the Haar measure on a product space
+  -- is the product of the Haar measures.
+  exact Measure.haarMeasure_pi
 
 -- Define the identity as a measurable equivalence
 def pi_borel_equiv : (∀ i, H i) ≃ᵐ (∀ i, H i) where
