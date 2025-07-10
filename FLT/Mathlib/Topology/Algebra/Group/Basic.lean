@@ -7,6 +7,7 @@ import Mathlib.Algebra.Group.Subgroup.Pointwise
 import Mathlib.Algebra.Order.Archimedean.Basic
 import Mathlib.Order.Filter.Bases.Finite
 import Mathlib.Topology.Algebra.Group.Defs
+import Mathlib.Topology.Algebra.Group.Basic
 import Mathlib.Topology.Algebra.Monoid
 import Mathlib.Topology.Homeomorph.Lemmas
 
@@ -1273,3 +1274,19 @@ theorem topologicalGroup_inf {t₁ t₂ : TopologicalSpace G} (h₁ : @IsTopolog
   cases b <;> assumption
 
 end LatticeOps
+
+open MulOpposite Set Units in
+lemma embedProduct_preimageOf (L : Type*) [Monoid L] : (range ⇑(embedProduct L)) =
+    {x : L × Lᵐᵒᵖ | x.1 * unop x.2 = 1 ∧ unop x.2 * x.1 = 1} := by
+  ext x
+  constructor
+  · rintro ⟨y, rfl⟩
+    simp
+  · rintro h
+    exact ⟨⟨x.1, unop x.2, h.1, h.2⟩, rfl⟩
+
+lemma embedProduct_closed (L : Type*) [Monoid L] [TopologicalSpace L] [ContinuousMul L] [T1Space L]
+    : IsClosed (Set.range ⇑(Units.embedProduct L)) := by
+  rw [embedProduct_preimageOf]
+  exact .inter (.preimage (by fun_prop) isClosed_singleton)
+    (.preimage (by fun_prop) isClosed_singleton)
