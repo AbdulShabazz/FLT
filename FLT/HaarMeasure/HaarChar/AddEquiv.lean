@@ -1,4 +1,5 @@
 import Mathlib.MeasureTheory.Measure.Haar.Unique
+import Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 
 import FLT.Mathlib.MeasureTheory.Group.Measure
 import FLT.Mathlib.MeasureTheory.Group.Haar
