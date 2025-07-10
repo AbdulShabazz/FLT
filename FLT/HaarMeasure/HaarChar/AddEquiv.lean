@@ -1704,8 +1704,9 @@ lemma haar_restrictedProduct_eq_restrictedProduct_haar
 lemma restrictedProductCongrRight_apply (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
     (x : Πʳ i, [G i, C i]) :
-    (MulEquiv.restrictedProductCongrRight φ hφ) x = fun i ↦ φ i (x i) :=
-  sorry
+    (MulEquiv.restrictedProductCongrRight φ hφ) x = fun i ↦ φ i (x i) := by
+  -- This equality holds by the definition of `restrictedProductCongrRight`.
+  rfl
 
 /-- Cylinder sets form a basis for the restricted product topology -/
 lemma cylinder_basis_restrictedProduct (G : ι → Type*) [∀ i, TopologicalSpace (G i)]
