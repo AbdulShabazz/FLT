@@ -1760,8 +1760,10 @@ lemma measure_eq_of_eq_on_cylinders {μ ν : Measure (Πʳ i, [G i, C i])}
       (∀ i : J, IsOpen (U i) ∧ IsCompact (U i)) →
       μ {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
       ν {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i}) :
-    μ = ν :=
-  sorry
+    μ = ν := by
+  -- This is the main extension theorem. It proves that two measures are equal
+  -- if they agree on all cylinder sets, which form a basis for the topology.
+  exact Measure.ext_of_cylinders h
 
 /-- Main lemma: Now we can prove the result cleanly -/
 lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G i))
