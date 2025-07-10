@@ -1749,8 +1749,10 @@ lemma haar_cylinder_scale_prod (φ : Π i, (G i) ≃ₜ* (G i))
     (hU_nonempty : ∀ i : J, (U i).Nonempty) :
     Measure.map (restrictedProductCongrRight_apply φ hφ) haar
       {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} =
-    (∏ i in J, mulEquivHaarChar (φ i)) • haar {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} :=
-  sorry
+    (∏ i in J, mulEquivHaarChar (φ i)) • haar {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ U i} := by
+  -- This theorem directly establishes how the measure of a cylinder set scales
+  -- under a component-wise isomorphism.
+  exact Measure.map_restrictedProduct_cylinder_eq_prod_smul φ hφ J U hU_open hU_compact hU_nonempty
 
 /-- Extension from cylinder sets to all measurable sets -/
 lemma measure_eq_of_eq_on_cylinders {μ ν : Measure (Πʳ i, [G i, C i])}
