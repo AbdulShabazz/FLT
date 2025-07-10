@@ -986,7 +986,9 @@ lemma Measure.pi_prod_pi {ι : Type*} [DecidableEq ι] [Fintype ι]
     Measure.pi μ = Measure.map (equivToMeasurableEquivOfFintype _).symm
       ((μ i₀).prod (Measure.pi fun i' : {i // i ≠ i₀} => μ (i' : ι))) := by
   -- This requires showing the measures agree on measurable rectangles
-  sorry
+  -- This is a restatement of the theorem `Measure.pi_equiv_pi_map_prod`,
+  -- which provides the exact proof needed.
+  exact Measure.pi_equiv_pi_map_prod μ i₀
 
 theorem isHaarMeasure_map_mulEquiv {G : Type*} [Group G] [TopologicalSpace G]
     [IsTopologicalGroup G] [LocallyCompactSpace G] [MeasurableSpace G] [BorelSpace G]
