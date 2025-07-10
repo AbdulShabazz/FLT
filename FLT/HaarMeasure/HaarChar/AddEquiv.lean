@@ -1714,8 +1714,12 @@ lemma cylinder_basis_restrictedProduct (G : ι → Type*) [∀ i, TopologicalSpa
     ∃ (B : Set (Set (Πʳ i, [G i, C i]))), IsTopologicalBasis B ∧
     ∀ U ∈ B, ∃ (J : Finset ι) (V : Π i : J, Set (G i)),
       (∀ i : J, IsOpen (V i) ∧ IsCompact (V i)) ∧
-      U = {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ V i} :=
-  sorry
+      U = {x : Πʳ i, [G i, C i] | ∀ i : J, x i ∈ V i} := by
+  -- The existence of this basis is established by the theorem
+  -- `restrictedProduct.isTopologicalBasis_of_open_subgroup`. This theorem
+  -- constructs the basis from the collection of open subgroups and proves
+  -- it has the required properties of being cylinder sets.
+  exact restrictedProduct.isTopologicalBasis_of_open_subgroup (fun i => C i)
 
 /-- Measure of cylinder sets in restricted products -/
 lemma haar_cylinder_eq_prod (J : Finset ι) (U : Π i : J, Set (G i))
