@@ -9,7 +9,8 @@ import FLT.Mathlib.MeasureTheory.Group.Measure
 import FLT.Mathlib.MeasureTheory.Measure.Pi
 import FLT.Mathlib.MeasureTheory.Measure.Regular
 
-import Mathlib.Topology.Algebra.RestrictedProduct
+import Mathlib.Topology.Algebra.RestrictedProduct.Basic
+import Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 
 --import Mathlib.Data.Finset.Basic
 
