@@ -256,6 +256,7 @@ The next result lies a little deeper.
   The function $\delta_R:R^\times\to\R_{>0}$ is continuous.
 \end{corollary}
 \begin{proof}
+  \leanok
   \uses{MeasureTheory.ringHaarChar_mul_integral}
   Fix a Haar measure $\mu$ on $R$ and a continuous real-valued function
   $f$ on $R$ with compact support and such that $\int f(x) d\mu(x)\not=0$.
@@ -406,11 +407,12 @@ the same determinant.
   \leanok
   \discussion{518}
   Say $B$ is a finite-dimensional central simple algebra over a field~$k$,
-  and $u\in B^\times$. Let $\ell_u:B\to B$ be the $k$-linear maping $x$ to $ux$ and
+  and $u\in B^\times$. Let $\ell_u:B\to B$ be the $k$-linear mapping $x$ to $ux$ and
   let $r_u:B\to B$ be the $k$-linear map sending $x$ to $xu$. Then
   $\det(\ell_u)=\det(r_u)$.
 \end{lemma}
 \begin{proof}
+  \leanok
   Determinants are unchanged by base extension, so WLOG $k$ is algebraically closed.
   Then it's known that $B$ must be a matrix algebra, say $M_n(k)$. Now $u$ can be thought
   of as a matrix which has its own intrinsic determinant $d$, and $B$ as a left $B$-module
@@ -451,6 +453,7 @@ Here are two facts which we will need about products.
   $d_{A\times B}(\phi\times\psi)=d_A(\phi)d_B(\psi)$.
 \end{lemma}
 \begin{proof}
+  \leanok
   We only need this result in the case where both $A$ and $B$ are second-countable, in which case
   {\tt Prod.borelSpace} can be used to show that Haar measure on $A\times B$ is the product of
   Haar measures on $A$ and $B$, and in this case the result follows easily. Without this assumption,
@@ -479,6 +482,7 @@ Here are two facts which we will need about products.
   with $\phi_i:A_i\to A_i$ additive homeomorphisms, then $d_{\prod_i A_i}(\prod_i\phi_i)=\prod_i d_{A_i}(\phi_i)$.
 \end{lemma}
 \begin{proof}
+  \leanok
   Induction on the size of the finite set, using the previous lemma.
 \end{proof}
 

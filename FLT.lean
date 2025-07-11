@@ -85,8 +85,10 @@ import FLT.Mathlib.RingTheory.Localization.BaseChange
 import FLT.Mathlib.RingTheory.TensorProduct.Basis
 import FLT.Mathlib.RingTheory.TensorProduct.Pi
 import FLT.Mathlib.RingTheory.Valuation.ValuationSubring
+import FLT.Mathlib.Topology.Algebra.Constructions
 import FLT.Mathlib.Topology.Algebra.ContinuousAlgEquiv
 import FLT.Mathlib.Topology.Algebra.ContinuousMonoidHom
+import FLT.Mathlib.Topology.Algebra.Group.Basic
 import FLT.Mathlib.Topology.Algebra.Group.Quotient
 import FLT.Mathlib.Topology.Algebra.Group.Units
 import FLT.Mathlib.Topology.Algebra.Module.Equiv
@@ -95,7 +97,8 @@ import FLT.Mathlib.Topology.Algebra.Module.ModuleTopology
 import FLT.Mathlib.Topology.Algebra.Module.Quotient
 import FLT.Mathlib.Topology.Algebra.Monoid
 import FLT.Mathlib.Topology.Algebra.Order.Field
-import FLT.Mathlib.Topology.Algebra.RestrictedProduct
+import FLT.Mathlib.Topology.Algebra.RestrictedProduct.Basic
+import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 import FLT.Mathlib.Topology.Algebra.UniformRing
 import FLT.Mathlib.Topology.Algebra.Valued.ValuationTopology
 import FLT.Mathlib.Topology.Algebra.Valued.WithVal
@@ -108,6 +111,7 @@ import FLT.NumberField.AdeleRing
 import FLT.NumberField.Completion.Finite
 import FLT.NumberField.Completion.Infinite
 import FLT.NumberField.DiscriminantBounds
+import FLT.NumberField.FiniteAdeleRing
 import FLT.NumberField.InfiniteAdeleRing
 import FLT.NumberField.InfinitePlace.Dimension
 import FLT.NumberField.InfinitePlace.Extension

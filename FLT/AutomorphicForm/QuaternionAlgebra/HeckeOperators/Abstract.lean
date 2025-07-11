@@ -166,14 +166,14 @@ noncomputable def HeckeOperator_toFun (a : fixedPoints V A) : fixedPoints U A :=
       exact Function.Injective.injOn Function.injective_id
     ⟩
 
-  noncomputable def HeckeOperator_addMonoidHom : fixedPoints V A →+ fixedPoints U A where
-    toFun := HeckeOperator_toFun h
-    map_zero' := by
-      ext
-      simp [HeckeOperator_toFun]
-    map_add' a b := by
-      ext
-      simp [HeckeOperator_toFun, -Set.mem_image, finsum_mem_add_distrib (h.image Quotient.out)]
+noncomputable def HeckeOperator_addMonoidHom : fixedPoints V A →+ fixedPoints U A where
+  toFun := HeckeOperator_toFun h
+  map_zero' := by
+    ext
+    simp [HeckeOperator_toFun]
+  map_add' a b := by
+    ext
+    simp [HeckeOperator_toFun, -Set.mem_image, finsum_mem_add_distrib (h.image Quotient.out)]
 
 variable {R : Type*} [Ring R] [Module R A] [SMulCommClass G R A]
 
@@ -217,3 +217,5 @@ theorem comm {g₁ g₂ : G} (h₁ : (QuotientGroup.mk '' (U * g₁ • U) : Set
   -- I'm sure there's a better way to do this!
   congr; ext g₂; congr; ext hg₂; congr; ext g₁; congr; ext hg₁;
   rw [smul_smul, smul_smul, hcomm _ hg₁ _ hg₂]
+
+end AbstractHeckeOperator

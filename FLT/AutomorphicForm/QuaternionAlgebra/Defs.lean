@@ -63,7 +63,7 @@ abbrev Dfx := (D ⊗[F] (FiniteAdeleRing (𝓞 F) F))ˣ
 
 /-- incl₁ is an abbreviation for the inclusion
 $D^\times\to(D\otimes_F\mathbb{A}_F^\infty)^\times.$ Remark: I wrote the `incl₁`
-docstring in LaTeX and the `incl₂` one in unicode. Which is better?-/
+docstring in LaTeX and the `incl₂` one in unicode. Which is better? -/
 noncomputable abbrev incl₁ : Dˣ →* Dfx F D :=
   Units.map (Algebra.TensorProduct.includeLeftRingHom.toMonoidHom)
 
@@ -247,12 +247,12 @@ quaternion algebra. -/
 def ring_smul (r : R) (φ : WeightTwoAutomorphicForm F D R) :
     WeightTwoAutomorphicForm F D R where
       toFun g := r • φ g
-      left_invt := by simp [left_invt, smul_comm]
+      left_invt := by simp [left_invt]
       right_invt := by
         obtain ⟨U, hU⟩ := φ.right_invt
         use U
         simp_all only [smul_eq_mul, implies_true, and_self]
-      trivial_central_char g z := by simp only [trivial_central_char, smul_comm r]
+      trivial_central_char g z := by simp only [trivial_central_char]
 
 instance : SMul R (WeightTwoAutomorphicForm F D R) where
   smul := ring_smul
@@ -263,7 +263,7 @@ lemma smul_apply (r : R) (φ : WeightTwoAutomorphicForm F D R)
 
 instance module : Module R (WeightTwoAutomorphicForm F D R) where
   one_smul g := by ext; simp [smul_apply]
-  mul_smul r s g := by ext; simp [smul_apply, mul_smul, mul_assoc]
+  mul_smul r s g := by ext; simp [smul_apply, mul_assoc]
   smul_zero r := by ext; simp [smul_apply]
   smul_add r f g := by ext; simp [smul_apply, mul_add]
   add_smul r s g := by ext; simp [smul_apply, add_mul]

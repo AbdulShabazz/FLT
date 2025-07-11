@@ -6,6 +6,16 @@ import Mathlib.Algebra.Central.Defs
 import FLT.Mathlib.Topology.Algebra.Module.ModuleTopology
 import FLT.Hacks.RightActionInstances
 import FLT.NumberField.AdeleRing
+/-!
+
+# Global units are in the determinant of the adelic Haar character
+
+If `K` is a number field and `B` is a finite-dimensional `K`-algebra
+then `B ⊗ 𝔸_K` is a locally compact topological ring, so it admits
+a Haar character `(B ⊗ 𝔸_K)ˣ → ℝ>0`. In this file we show
+that the global units `Bˣ` are in the kernel of this character.
+
+-/
 
 open NumberField
 
@@ -40,7 +50,7 @@ omit [FiniteDimensional L V] [FiniteDimensional K V] in
 open scoped TensorProduct.RightActions in
 /-- V ⊗[K] 𝔸_K = V ⊗[L] 𝔸_L as 𝔸_K-modules for V an L-module and K ⊆ L number fields. -/
 noncomputable def NumberField.AdeleRing.ModuleBaseChangeAddEquiv' [Module (𝔸 K) (V ⊗[L] 𝔸 L)]
-    [IsScalarTower (𝔸 K) (𝔸 L) (V ⊗[L] 𝔸 L)]:
+    [IsScalarTower (𝔸 K) (𝔸 L) (V ⊗[L] 𝔸 L)] :
     V ⊗[K] (𝔸 K) ≃ₗ[𝔸 K] (V ⊗[L] (𝔸 L)) where
   __ := (NumberField.AdeleRing.ModuleBaseChangeAddEquiv K L V).toAddEquiv
   map_smul' a vb := by
@@ -49,7 +59,7 @@ noncomputable def NumberField.AdeleRing.ModuleBaseChangeAddEquiv' [Module (𝔸 
     | tmul x y =>
         simp [TensorProduct.smul_tmul', -algebraMap_smul,
           algebra_compatible_smul (AdeleRing (𝓞 L) L) a]
-    | add x y _ _ => simp_all [mul_add, add_mul]
+    | add x y _ _ => simp_all
 
 open scoped TensorProduct.RightActions in
 /-- 𝔸_K ⊗[K] V = 𝔸_L ⊗[L] V as topological 𝔸_K-modules for V an L-module and K ⊆ L number fields. -/
