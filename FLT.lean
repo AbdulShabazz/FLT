@@ -6061,7 +6061,6 @@ import FLT.Mathlib.Topology.Algebra.PontryaginDual
 import FLT.Mathlib.Topology.Algebra.ProperAction.Basic
 import FLT.Mathlib.Topology.Algebra.ProperAction.ProperlyDiscontinuous
 import FLT.Mathlib.Topology.Algebra.ProperConstSMul
-import FLT.Mathlib.Topology.Algebra.RestrictedProduct
 import FLT.Mathlib.Topology.Algebra.RestrictedProduct.Basic
 import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 import FLT.Mathlib.Topology.Algebra.Ring.Basic
