@@ -289,17 +289,17 @@ objects with a 1. The support is the components which aren't 1.)
 -/
 @[to_additive "The support of an element of a restricted product of additive monoids
 (or more generally, objects with a 0. The support is the components which aren't 0."]
-def mulSupport (u : Πʳ i, [G i, A i]) : Set ι :=
+def mulSupport' (u : Πʳ i, [G i, A i]) : Set ι :=
   {i : ι | u i ≠ 1}
 
 variable [(i : ι) → One (G i)] in
 @[to_additive (attr := simp)]
-lemma not_mem_mulSupport {u : Πʳ i, [G i, A i]} (i : ι) :
+lemma not_mem_mulSupport' {u : Πʳ i, [G i, A i]} (i : ι) :
   i ∉ mulSupport u ↔ u i = 1 := by simp [mulSupport]
 
 variable [(i : ι) → Monoid (G i)] [∀ i, SubmonoidClass (S i) (G i)] in
 @[to_additive]
-lemma mul_comm_of_disjoint_mulSupport {u v : Πʳ i, [G i, A i]}
+lemma mul_comm_of_disjoint_mulSupport' {u v : Πʳ i, [G i, A i]}
     (h : mulSupport u ∩ mulSupport v = ∅) : u * v = v * u := by
   ext i
   obtain hi | hi : i ∉ u.mulSupport ∨ i ∉ v.mulSupport := by
@@ -313,7 +313,7 @@ lemma mul_comm_of_disjoint_mulSupport {u v : Πʳ i, [G i, A i]}
 
 variable [(i : ι) → Monoid (G i)] [∀ i, SubmonoidClass (S i) (G i)] in
 @[to_additive]
-lemma mulSupport_mul_subset {u v : Πʳ i, [G i, A i]} {J : Set ι} (hu : mulSupport u ⊆ J)
+lemma mulSupport_mul_subset' {u v : Πʳ i, [G i, A i]} {J : Set ι} (hu : mulSupport u ⊆ J)
     (hv : mulSupport v ⊆ J) : mulSupport (u * v) ⊆ J := by
   intro i hi
   contrapose! hi
@@ -322,7 +322,7 @@ lemma mulSupport_mul_subset {u v : Πʳ i, [G i, A i]} {J : Set ι} (hu : mulSup
 
 variable [(i : ι) → Group (G i)] [∀ i, SubgroupClass (S i) (G i)] in
 @[to_additive (attr := simp)]
-lemma mulSupport_inv {u : Πʳ i, [G i, A i]} : mulSupport u⁻¹ = mulSupport u := by
+lemma mulSupport_inv' {u : Πʳ i, [G i, A i]} : mulSupport u⁻¹ = mulSupport u := by
   ext i
   simp only [mulSupport]
   exact inv_ne_one
@@ -334,7 +334,7 @@ variable [(i : ι) → Monoid (G i)] [∀ i, SubmonoidClass (S i) (G i)]
 `U` can be written as Uᵢ × Uⁱ with Uᵢ supported at the i'th component and Uⁱ supported
 away from `i`.
 -/
-def SubmonoidClass.isProductAt (U : T) (i : ι) : Prop :=
+def SubmonoidClass.isProductAt' (U : T) (i : ι) : Prop :=
   ∀ u ∈ U, ∃ uᵢ, uᵢ ∈ U ∧ ∃ uᵢ', uᵢ' ∈ U ∧ u = uᵢ * uᵢ' ∧ mulSupport uᵢ ⊆ {i} ∧ i ∉ mulSupport uᵢ'
 
 variable [(i : ι) → Group (G i)] [∀ i, SubgroupClass (S i) (G i)]
@@ -345,7 +345,7 @@ open scoped Pointwise in
 If `U` is a product at `i` and `g` is supported at `i` then `UgU` can be written as
 a disjoint union of cosets `gᵢU` with the `gᵢ` supported at `i`.
 -/
-lemma mem_coset_and_mulSupport_subset_of_isProductAt
+lemma mem_coset_and_mulSupport_subset_of_isProductAt'
     {U : T} (i : ι) (g : Πʳ i, [G i, A i])
     (hU : SubmonoidClass.isProductAt U i) (hg : mulSupport g ⊆ {i}) (γ :  Πʳ i, [G i, A i])
     (hγ : γ ∈ U * g • (U : Set (Πʳ i, [G i, A i]))) :
