@@ -11,6 +11,7 @@ import FLT.Mathlib.Topology.Algebra.ContinuousMonoidHom
 import FLT.Mathlib.Topology.Algebra.Group
 import FLT.Mathlib.Topology.Algebra.Pi
 
+import Mathlib.Topology.Algebra.Group.Basic
 import Mathlib.Topology.Algebra.RestrictedProduct.Basic
 import Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 
@@ -165,6 +166,10 @@ import Mathlib.Topology.Sets.Compacts
 import Init.Prelude
 
 import Mathlib.Algebra.Group.Basic -- For mul_one, one_mul, mul_comm, mul_assoc
+import Mathlib.Algebra.Group.Equiv.Basic
+import Mathlib.Algebra.Group.Equiv.Defs
+import Mathlib.Algebra.Group.Hom.Basic
+import Mathlib.Algebra.Group.Hom.Defs
 
 open MeasureTheory.Measure
 open scoped NNReal
@@ -1768,6 +1773,11 @@ lemma measure_eq_of_eq_on_cylinders {μ ν : Measure (Πʳ i, [G i, C i])}
   -- This is the main extension theorem. It proves that two measures are equal
   -- if they agree on all cylinder sets, which form a basis for the topology.
   exact Measure.ext_of_cylinders h
+
+@[simp]
+lemma mulEquiv_coe {G' H' : Type*} [Group G'] [Group H'] (φ : G' ≃* H') :
+    ⇑φ.toMulEquiv = φ := by
+  simp [map_mul]
 
 theorem mulEquivHaarChar_restrictedProductCongrRight_eq_prod (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)) :
