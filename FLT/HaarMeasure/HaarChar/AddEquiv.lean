@@ -1837,7 +1837,7 @@ theorem mulEquivHaarChar_restrictedProductCongrRight_eq_prod (φ : Π i, (G i) �
   -- The resulting equality is the definition of `mulEquivHaarChar`
   exact (mulEquivHaarChar_spec _ _).symm
 
-/-- Main lemma: Now we can prove the result cleanly -/
+/-- Main lemma: Now we can prove the result cleanly task #552 -/
 lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)) :
     -- typeclass stuff
