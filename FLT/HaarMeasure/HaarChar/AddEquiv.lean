@@ -1771,6 +1771,11 @@ lemma measure_eq_of_eq_on_cylinders {μ ν : Measure (Πʳ i, [G i, C i])}
 
 theorem mulEquivHaarChar_restrictedProductCongrRight_eq_prod (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)) :
+    letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
+    haveI : BorelSpace (Πʳ i, [G i, C i]) := ⟨rfl⟩
+    haveI : ∀ i, WeaklyLocallyCompactSpace (G i) := fun i ↦
+      haveI : Fact (IsOpen (C i : Set (G i))) := ⟨hCopen.out i⟩
+      WeaklyLocallyCompactSpace.of_isTopologicalGroup_of_isOpen_compactSpace_subgroup (C i)
     mulEquivHaarChar
       (.restrictedProductCongrRight φ hφ : (Πʳ i, [G i, C i]) ≃ₜ* (Πʳ i, [G i, C i])) =
     ∏ᶠ i, mulEquivHaarChar (φ i) := by
@@ -1819,21 +1824,17 @@ theorem mulEquivHaarChar_restrictedProductCongrRight_eq_prod (φ : Π i, (G i) �
 
 theorem mulEquivHaarChar_restrictedProductCongrRight_eq_prod' (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)) :
+    letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
+    haveI : BorelSpace (Πʳ i, [G i, C i]) := ⟨rfl⟩
+    haveI : ∀ i, WeaklyLocallyCompactSpace (G i) := fun i ↦
+      haveI : Fact (IsOpen (C i : Set (G i))) := ⟨hCopen.out i⟩
+      WeaklyLocallyCompactSpace.of_isTopologicalGroup_of_isOpen_compactSpace_subgroup (C i)
     mulEquivHaarChar
       (.restrictedProductCongrRight φ hφ : (Πʳ i, [G i, C i]) ≃ₜ* (Πʳ i, [G i, C i])) =
     ∏ᶠ i, mulEquivHaarChar (φ i) := by
-  -- Unfold the definition of `mulEquivHaarChar`
-  simp_rw [mulEquivHaarChar, haarScalarFactor_restrictedProductCongrRight,
-    haarScalarFactor_apply]
-  -- Rewrite using the finite product property
-  rw [finprod_comp_equiv]
-  -- Apply the given hypothesis
-  exact hφ
-  
-  -- Since the measures agree on all cylinder sets, they must be equal everywhere
-  apply (Measure.ext_of_cylinders h_eq_on_cylinders).trans
-  -- The resulting equality is the definition of `mulEquivHaarChar`
-  exact (mulEquivHaarChar_spec _ _).symm
+  -- Now the instances are available in the proof
+  simp_rw [← mulEquiv_coe, map_prod, mulEquiv_coe, restrictedProductCongrRight_apply,
+    finprod_prod_finset, ← prod_mul_distrib, mulEquiv_apply, mulEquiv_refl_apply, one_prod]
 
 /-- Main lemma: Now we can prove the result cleanly task #552 -/
 lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G i))
@@ -1848,9 +1849,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G 
     mulEquivHaarChar
       (.restrictedProductCongrRight φ hφ : (Πʳ i, [G i, C i]) ≃ₜ* (Πʳ i, [G i, C i])) =
     ∏ᶠ i, mulEquivHaarChar (φ i) := by
-  -- This theorem directly proves that the mulEquivHaarChar of a restricted product
-  -- congruence is the finite product of the individual mulEquivHaarChars.
-  exact mulEquivHaarChar_restrictedProductCongrRight_eq_prod (fun i => hφ.out i)
+  exact mulEquivHaarChar_restrictedProductCongrRight_eq_prod' φ hφ
 
 end restrictedproduct
 
