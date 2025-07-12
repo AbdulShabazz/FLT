@@ -1849,7 +1849,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G 
     mulEquivHaarChar
       (.restrictedProductCongrRight φ hφ : (Πʳ i, [G i, C i]) ≃ₜ* (Πʳ i, [G i, C i])) =
     ∏ᶠ i, mulEquivHaarChar (φ i) := by
-  exact mulEquivHaarChar_restrictedProductCongrRight_eq_prod' φ hφ
+  exact mulEquivHaarChar_restrictedProductCongrRight_eq_prod φ hφ
 
 end restrictedproduct
 
