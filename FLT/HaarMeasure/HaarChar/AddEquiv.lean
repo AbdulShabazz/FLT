@@ -1817,8 +1817,7 @@ theorem mulEquivHaarChar_restrictedProductCongrRight_eq_prod (φ : Π i, (G i) �
     exact Finset.prod_eq_fintype_prod_of_support_subset (Finset.support_mulEquivHaarChar_subset_of_eventually_mem hφ) J
   ))
 
-/--
-theorem mulEquivHaarChar_restrictedProductCongrRight_eq_prod (φ : Π i, (G i) ≃ₜ* (G i))
+theorem mulEquivHaarChar_restrictedProductCongrRight_eq_prod' (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)) :
     mulEquivHaarChar
       (.restrictedProductCongrRight φ hφ : (Πʳ i, [G i, C i]) ≃ₜ* (Πʳ i, [G i, C i])) =
@@ -1830,8 +1829,7 @@ theorem mulEquivHaarChar_restrictedProductCongrRight_eq_prod (φ : Π i, (G i) �
   rw [finprod_comp_equiv]
   -- Apply the given hypothesis
   exact hφ
--/
-
+  
   -- Since the measures agree on all cylinder sets, they must be equal everywhere
   apply (Measure.ext_of_cylinders h_eq_on_cylinders).trans
   -- The resulting equality is the definition of `mulEquivHaarChar`
