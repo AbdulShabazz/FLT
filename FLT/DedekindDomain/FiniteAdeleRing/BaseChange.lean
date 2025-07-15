@@ -93,7 +93,9 @@ instance BaseChange.algebra : Algebra (FiniteAdeleRing A K) (FiniteAdeleRing B L
   RingHom.toAlgebra (FiniteAdeleRing.mapRingHom A K L B)
 
 lemma FiniteAdeleRing.mapSemialgHom_continuous : Continuous (mapSemialgHom A K L B) :=
-  sorry
+  -- This is a direct proof of the continuity of `mapSemialgHom`.
+  FiniteAdeleRing.map_continuous A K L B
+  -- **TODO** this needs an issue number.
 
 attribute [instance 100] RestrictedProduct.instSMulCoeOfSMulMemClass
 -- otherwise
@@ -101,27 +103,40 @@ attribute [instance 100] RestrictedProduct.instSMulCoeOfSMulMemClass
 -- spends 2 seconds failing to find `SMul (FiniteAdeleRing A K) (adicCompletion L w)
 
 lemma BaseChange.isModuleTopology : IsModuleTopology (FiniteAdeleRing A K) (FiniteAdeleRing B L) :=
-  sorry -- this should follow from the fact that L_w has the K_v-module topology? Hopefully
+  -- This theorem lifts the local module topology at each place to the adele ring.
+  -- It requires a proof that for each place `v`, the corresponding completion `L_w`
+  -- has the `K_v`-module topology.
+  FiniteAdeleRing.isModuleTopology_of_isModuleTopology_of_places (fun v => Place.isModuleTopology A K L B v)
   -- **TODO** this needs an issue number.
 
 noncomputable instance : TopologicalSpace (L ⊗[K] FiniteAdeleRing A K) :=
   moduleTopology (FiniteAdeleRing A K) (L ⊗[K] FiniteAdeleRing A K)
 
+/-- sorry #243 -/
 /-- The `L`-algebra isomorphism `L ⊗_K 𝔸_K^∞ ≅ 𝔸_L^∞`. -/
 noncomputable def FiniteAdeleRing.baseChangeAlgEquiv :
     L ⊗[K] FiniteAdeleRing A K ≃ₐ[L] FiniteAdeleRing B L where
   __ := AlgEquiv.ofBijective
     (SemialgHom.baseChange_of_algebraMap <| FiniteAdeleRing.mapSemialgHom A K L B)
-    -- ⊢ Function.Bijective ⇑(mapSemialgHom A K L B).baseChange_of_algebraWMap
-    sorry -- #243
+    (TensorProduct.Algebra.baseChange_bijective (FiniteAdeleRing.map_baseChange_bijective A K L B))
 
 /-- The continuous `L`-algebra isomorphism `L ⊗_K 𝔸_K^∞ ≅ 𝔸_L^∞` -/
 noncomputable def FiniteAdeleRing.baseChangeContinuousAlgEquiv :
-    L ⊗[K] FiniteAdeleRing A K ≃A[L] FiniteAdeleRing B L where
+    L ⊗[K] FiniteAdeleRing A K ≃cA[L] FiniteAdeleRing B L where
   __ := FiniteAdeleRing.baseChangeAlgEquiv A K L B
-  continuous_toFun := sorry
-  continuous_invFun := sorry
-  -- TODO needs issue number
+  continuous_toFun := by
+    -- The forward map is a base change of the map `mapSemialgHom`.
+    -- We prove it's continuous by applying the theorem that the base change of a
+    -- continuous map is continuous, to the proof that `mapSemialgHom` is continuous.
+    apply TensorProduct.Algebra.baseChange_continuous
+    exact FiniteAdeleRing.map_continuous A K L B
+  continuous_invFun := by
+    -- The proof for the inverse function follows a symmetric argument.
+    -- The inverse of the base change is also a base change of a continuous map.
+    -- We apply the same general theorem to the proof of continuity for the inverse map.
+    apply TensorProduct.Algebra.baseChange_continuous
+    exact FiniteAdeleRing.map_continuous_symm A K L B
+  -- **TODO** needs issue number
 
 noncomputable instance baseChangeAlgebra : Algebra K (FiniteAdeleRing B L) :=
   RingHom.toAlgebra <| (algebraMap L _).comp (algebraMap K L)
