@@ -597,7 +597,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight [∀i, CompactSpace (G i)] [�
     · ext x
       simp [X]
   obtain ⟨U, hU_open, hU_compact, hX_eq⟩ := this
-  have hX_open : IsOpen X := sorry -- mulEquivHaarChar_restrictedProductCongrRight_X_open φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
+  have hX_open : IsOpen X := mulEquivHaarChar_restrictedProductCongrRight_X_open φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
   have hX_closed : IsClosed X := by
     rw [hX_eq]
     rw [Set.setOf_and]
@@ -620,8 +620,8 @@ lemma mulEquivHaarChar_restrictedProductCongrRight [∀i, CompactSpace (G i)] [�
         simp [hi]
         sorry
         --exact mulEquivHaarChar_restrictedProductCongrRight_X_closed_subgoal φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq i hi
-  have hX_compact : IsCompact X := sorry -- mulEquivHaarChar_restrictedProductCongrRight_X_compact φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
-  have hX_interior : (interior X).Nonempty := sorry -- mulEquivHaarChar_restrictedProductCongrRight_X_interior_nonempty φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
+  have hX_compact : IsCompact X := mulEquivHaarChar_restrictedProductCongrRight_X_compact φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
+  have hX_interior : (interior X).Nonempty := mulEquivHaarChar_restrictedProductCongrRight_X_interior_nonempty φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
   have hX_pos : 0 < haar X := IsOpen.measure_pos haar hX_open ⟨1, by simp [X, one_mem _]⟩
   have hX_fin : haar X < ∞ := hX_compact.measure_lt_top
   have hS : ∀ i ∉ S, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i) := fun i hi => Classical.not_not.mp (mt (fun h => Set.mem_setOf.mpr h) hi)
