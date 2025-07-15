@@ -272,6 +272,101 @@ def ContinuousMulEquiv.restrictedProductUnits {ι : Type*}
 
 end pi
 
+
+section supports
+
+namespace RestrictedProduct
+
+variable {S T : ι → Type*} -- subobject types
+variable [Π i, SetLike (S i) (G i)] [Π i, SetLike (T i) (H i)]
+variable {A : Π i, S i} {B : Π i, T i}
+
+-- this should all be for dependent functions
+
+variable [(i : ι) → One (G i)] in
+/-- The support of an element of a restricted product of monoids (or more generally,
+objects with a 1. The support is the components which aren't 1.)
+-/
+@[to_additive "The support of an element of a restricted product of additive monoids
+(or more generally, objects with a 0. The support is the components which aren't 0."]
+def mulSupport' (u : Πʳ i, [G i, A i]) : Set ι :=
+  {i : ι | u i ≠ 1}
+
+variable [(i : ι) → One (G i)] in
+@[to_additive (attr := simp)]
+lemma not_mem_mulSupport' {u : Πʳ i, [G i, A i]} (i : ι) :
+  i ∉ mulSupport u ↔ u i = 1 := by simp [mulSupport]
+
+variable [(i : ι) → Monoid (G i)] [∀ i, SubmonoidClass (S i) (G i)] in
+@[to_additive]
+lemma mul_comm_of_disjoint_mulSupport' {u v : Πʳ i, [G i, A i]}
+    (h : mulSupport u ∩ mulSupport v = ∅) : u * v = v * u := by
+  ext i
+  obtain hi | hi : i ∉ u.mulSupport ∨ i ∉ v.mulSupport := by
+    rw [Set.ext_iff] at h
+    specialize h i
+    tauto
+  · rw [not_mem_mulSupport] at hi
+    simp [hi]
+  · rw [not_mem_mulSupport] at hi
+    simp [hi]
+
+variable [(i : ι) → Monoid (G i)] [∀ i, SubmonoidClass (S i) (G i)] in
+@[to_additive]
+lemma mulSupport_mul_subset' {u v : Πʳ i, [G i, A i]} {J : Set ι} (hu : mulSupport u ⊆ J)
+    (hv : mulSupport v ⊆ J) : mulSupport (u * v) ⊆ J := by
+  intro i hi
+  contrapose! hi
+  simp [not_mem_mulSupport, (not_mem_mulSupport i).1 (fun a ↦ hi (hu a)),
+    (not_mem_mulSupport i).1 (fun a ↦ hi (hv a))]
+
+variable [(i : ι) → Group (G i)] [∀ i, SubgroupClass (S i) (G i)] in
+@[to_additive (attr := simp)]
+lemma mulSupport_inv' {u : Πʳ i, [G i, A i]} : mulSupport u⁻¹ = mulSupport u := by
+  ext i
+  simp only [mulSupport]
+  exact inv_ne_one
+
+variable [(i : ι) → Monoid (G i)] [∀ i, SubmonoidClass (S i) (G i)]
+    {T : Type*} [SetLike T (Πʳ i, [G i, A i])]
+    [SubmonoidClass T (Πʳ i, [G i, A i])] in
+/-- A submonoid `U` of a resticted product of monoids is a product at `i` if
+`U` can be written as Uᵢ × Uⁱ with Uᵢ supported at the i'th component and Uⁱ supported
+away from `i`.
+-/
+def SubmonoidClass.isProductAt' (U : T) (i : ι) : Prop :=
+  ∀ u ∈ U, ∃ uᵢ, uᵢ ∈ U ∧ ∃ uᵢ', uᵢ' ∈ U ∧ u = uᵢ * uᵢ' ∧ mulSupport uᵢ ⊆ {i} ∧ i ∉ mulSupport uᵢ'
+
+variable [(i : ι) → Group (G i)] [∀ i, SubgroupClass (S i) (G i)]
+    {T : Type*} [SetLike T (Πʳ i, [G i, A i])]
+    [SubgroupClass T (Πʳ i, [G i, A i])] in
+open scoped Pointwise in
+/--
+If `U` is a product at `i` and `g` is supported at `i` then `UgU` can be written as
+a disjoint union of cosets `gᵢU` with the `gᵢ` supported at `i`.
+-/
+lemma mem_coset_and_mulSupport_subset_of_isProductAt'
+    {U : T} (i : ι) (g : Πʳ i, [G i, A i])
+    (hU : SubmonoidClass.isProductAt U i) (hg : mulSupport g ⊆ {i}) (γ :  Πʳ i, [G i, A i])
+    (hγ : γ ∈ U * g • (U : Set (Πʳ i, [G i, A i]))) :
+    ∃ δ, δ ∈ γ • (U : Set (Πʳ i, [G i, A i])) ∧ mulSupport δ ⊆ {i} := by
+  obtain ⟨u, hu, _, ⟨v, hv, rfl⟩, rfl⟩ := hγ
+  obtain ⟨uᵢ, huᵢU, uᵢ', huᵢ'U, rfl, huᵢ, huᵢ'⟩ := hU u hu
+  refine ⟨uᵢ * g, ⟨v⁻¹ * uᵢ'⁻¹, mul_mem (inv_mem hv) (inv_mem huᵢ'U), by
+    have hcomm : g * uᵢ'⁻¹ = uᵢ'⁻¹ * g := mul_comm_of_disjoint_mulSupport <| by
+      rw [mulSupport_inv]
+      -- X ⊆ {i}, i ∉ Y => X ∩ Y = ∅
+      rw [Set.eq_empty_iff_forall_notMem]
+      intro j ⟨hj1, hj2⟩
+      apply huᵢ'
+      apply hg at hj1
+      simp_all
+    simp only [smul_eq_mul, mul_assoc, mul_inv_cancel_left, hcomm]⟩,
+    mulSupport_mul_subset huᵢ hg⟩
+
+end RestrictedProduct
+end supports
+
 section flatten
 
 variable {ι₂ : Type*} {𝒢 : Filter ι₂} {f : ι → ι₂} (C)
