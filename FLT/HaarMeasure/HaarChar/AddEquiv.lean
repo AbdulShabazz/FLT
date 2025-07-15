@@ -479,40 +479,109 @@ variable {ι : Type*}
     [∀ i, MeasurableSpace (G i)]
     [∀ i, BorelSpace (G i)]
 
-open ContinuousMulEquiv in
+open ContinuousMulEquiv Classical in
 @[to_additive]
-lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G i))
+lemma mulEquivHaarChar_restrictedProductCongrRight [∀i, CompactSpace (G i)] [∀ i, T2Space (G i)] (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)) :
-    -- typeclass stuff
     letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
     haveI : BorelSpace (Πʳ i, [G i, C i]) := ⟨rfl⟩
     haveI : ∀ i, WeaklyLocallyCompactSpace (G i) := fun i ↦
       haveI : Fact (IsOpen (C i : Set (G i))) := ⟨hCopen.out i⟩
       WeaklyLocallyCompactSpace.of_isTopologicalGroup_of_isOpen_compactSpace_subgroup (C i)
-    -- lemma statement starts here
     mulEquivHaarChar
       (.restrictedProductCongrRight φ hφ : (Πʳ i, [G i, C i]) ≃ₜ* (Πʳ i, [G i, C i])) =
     ∏ᶠ i, mulEquivHaarChar (φ i) := by
   letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
   haveI : BorelSpace (Πʳ i, [G i, C i]) := ⟨rfl⟩
-  -- -- the below code created a compact open in the restricted product and shows
-  -- -- it has Haar measure 0 < μ < ∞ but I've realised I don't know what to do next.
-  -- -- The blueprint has a proof which I can make work.
-  -- set X : Set (Πʳ i, [G i, C i]) := {x | ∀ i, x i ∈ C i} with hX
-  -- have := isOpenEmbedding_structureMap (R := G) (A := fun i ↦ (C i : Set (G i))) Fact.out
-  -- have isOpenEmbedding := this
-  -- apply Topology.IsOpenEmbedding.isOpen_range at this
-  -- rw [range_structureMap] at this
-  -- have hXopen : IsOpen X := this
-  -- have hXnonempty : Nonempty X := Nonempty.intro ⟨⟨fun x ↦ 1, Filter.Eventually.of_forall <|
-  --   fun _ ↦ one_mem _⟩, fun _ ↦ one_mem _⟩
-  -- have hXμpos : 0 < haar X := IsOpen.measure_pos haar hXopen Set.Nonempty.of_subtype
-  -- have hXcompact : IsCompact X := by
-  --   have := isCompact_range isOpenEmbedding.continuous
-  --   rw [range_structureMap] at this
-  --   apply this
-  -- have hXμfinite : haar X < ∞ := IsCompact.measure_lt_top hXcompact
-  sorry -- FLT#552
+  rw [Filter.eventually_cofinite] at hφ
+  let S : Set ι := {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)}
+  have hS_finite : S.Finite := hφ
+  let X : Set (Πʳ i, [G i, C i]) := {x | ∀ i ∉ S, x i ∈ C i}
+  haveI : Fintype S := hS_finite.fintype
+  have : ∃ (U : Set (Π i : S, G i)), IsOpen U ∧ IsCompact U ∧
+    X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i} := by
+    use Set.univ
+    constructor
+    · exact isOpen_univ
+    constructor
+    · exact isCompact_univ
+    · ext x
+      simp [X]
+  obtain ⟨U, hU_open, hU_compact, hX_eq⟩ := this
+  have hX_open : IsOpen X := mulEquivHaarChar_restrictedProductCongrRight_X_open φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
+  have hX_closed : IsClosed X := by
+    rw [hX_eq]
+    rw [Set.setOf_and]
+    apply IsClosed.inter
+    · -- First set: preimage of univ is the whole space
+      have : {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ (Set.univ : Set (Π i : S, G i.val))} = Set.univ := by
+        ext x
+        simp
+      sorry
+      /- rw [this]
+      exact isClosed_univ -/
+    · -- Second set: {x | ∀ i ∉ S, x i ∈ C i}
+      rw [Set.setOf_forall]
+      apply isClosed_iInter
+      intro i
+      by_cases hi : i ∈ S
+      · -- If i ∈ S, the condition is vacuous
+        simp [hi]
+      · -- If i ∉ S, we need {x | x i ∈ C i} is closed
+        simp [hi]
+        sorry
+        --exact mulEquivHaarChar_restrictedProductCongrRight_X_closed_subgoal φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq i hi
+  have hX_compact : IsCompact X := mulEquivHaarChar_restrictedProductCongrRight_X_compact φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
+  have hX_interior : (interior X).Nonempty := mulEquivHaarChar_restrictedProductCongrRight_X_interior_nonempty φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
+  have hX_pos : 0 < haar X := IsOpen.measure_pos haar hX_open ⟨1, by simp [X, one_mem _]⟩
+  have hX_fin : haar X < ∞ := hX_compact.measure_lt_top
+  have hS : ∀ i ∉ S, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i) := fun i hi => Classical.not_not.mp (mt (fun h => Set.mem_setOf.mpr h) hi)
+  have key : ∀ x ∈ X, restrictedProductCongrRight φ hφ x = ⟨fun i ↦ if i ∈ S then φ i (x i) else x i, by
+    filter_upwards [x.prop] with k hk
+    split_ifs with h
+    · exact (hS k h).mapsTo hk
+    · exact hk⟩ := by
+    intro x hx
+    ext i
+    by_cases hi : i ∈ S
+    · sorry --simp [restrictedProductCongrRight, hi]
+    · simp only [restrictedProductCongrRight, MonoidHom.restrictedProductCongrRight, congrRight]
+      exact hx i hi
+  suffices mulEquivHaarChar (restrictedProductCongrRight φ hφ) * haar X =
+      (∏ᶠ i, mulEquivHaarChar (φ i)) * haar X by sorry
+    --exact ENNReal.mul_right_inj hX_pos.ne' hX_fin.ne this.symm
+  calc mulEquivHaarChar (restrictedProductCongrRight φ hφ) * haar X
+    _ = haar ((restrictedProductCongrRight φ hφ) '' X) := by
+        -- Generalize to compact closed using regularity
+        have eq_smul_compact (c : ℝ≥0) (s : Set (Πʳ i, [G i, C i])) (hs_comp : IsCompact s) (hs_closed : IsClosed s) : (c • haar) s = c * haar s := mulEquivHaarChar_restrictedProductCongrRight_eq_smul_compact φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq c s hs_comp hs_closed
+        rw [mulEquivHaarChar, smul_apply, haarScalarFactor_eq_mul haar (map _ haar), mul_comm, mul_smul, ← eq_smul_compact _ X hX_compact hX_closed, ← eq_smul_compact _ ((restrictedProductCongrRight φ hφ) '' X) (hX_compact.image _) (hX_closed.image _), ← mul_smul, haarScalarFactor_map, ← haarScalarFactor_eq_mul, haarScalarFactor_self, one_smul]
+    _ = haar {x | ∀ i ∉ S, x i ∈ C i} := by
+        congr 1
+        ext x
+        simp only [Set.mem_image, X, Set.mem_setOf]
+        refine ⟨fun ⟨y, hy, rfl⟩ i hi ↦ ?_, fun hx ↦ ?_⟩
+        · have := key y hy
+          simp only [coe_mk, coe_fn_mk] at this
+          rw [this]
+          split_ifs with h
+          · contradiction
+          · exact hy i hi
+        · refine ⟨(restrictedProductCongrRight φ hφ).symm x, fun i hi ↦ ?_, ?_⟩
+          · simp only [restrictedProductCongrRight, symm_mk, MulEquiv.symm_mk, coe_fn_symm_mk]
+            have : x i ∈ C i := hx i hi
+            have bij := hS i hi
+            exact bij.symm.mapsTo this
+          · simp
+    _ = (∏ i ∈ S, mulEquivHaarChar (φ i)) * haar X := by
+        rw [← finprod_eq_prod_of_fintype]
+        exact mulEquivHaarChar_piCongrRight fun i ↦ φ i
+    _ = (∏ᶠ i, mulEquivHaarChar (φ i)) * haar X := by
+        congr 1
+        apply finprod_eq_prod_of_subset
+        intro i hi
+        simp only [Set.mem_compl_iff, Set.mem_setOf] at hi
+        push_neg at hi
+        exact mulEquivHaarChar_eq_one_of_compactSpace (φ i) -- Complete the finite product calculation -- FLT#552
 
 end restrictedproduct
 
