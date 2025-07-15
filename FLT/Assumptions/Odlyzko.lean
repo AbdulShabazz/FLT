@@ -44,6 +44,14 @@ The github tracking issue for this assumption is #458 on the FLT github reposito
 -/
 open Polynomial NumberField Module
 
+class IsTotallyComplex (K : Type u) [Field K] : Prop :=
+  (exists_i : ∃ (i : K), i * i = -1)
+
+-- Prove a simple lemma using IsTotallyComplex
+lemma example_use {K : Type u} [Field K] [IsTotallyComplex K] :
+  ∃ (z : K), z * z = -1 :=
+  IsTotallyComplex.exists_i
+
 /-- An "Odlyzko bound" for the root discriminant of a totally complex number field
 of degree 18 and above. -/
 axiom Odlyzko_statement (K : Type*) [Field K] [NumberField K] [IsTotallyComplex K]
