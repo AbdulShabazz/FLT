@@ -480,6 +480,95 @@ variable {ι : Type*}
     [∀ i, BorelSpace (G i)]
 
 open ContinuousMulEquiv Classical in
+lemma mulEquivHaarChar_restrictedProductCongrRight_X_open [∀i, CompactSpace (G i)]
+[∀ i, T2Space (G i)] (φ : Π i, (G i) ≃ₜ* (G i))
+  (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+  (S : Set ι) (hS_finite : S.Finite) (hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)})
+  (X : Set (Πʳ i, [G i, C i]) ) (hX_def : X = {x | ∀ i ∉ S, x i ∈ C i})
+  (U : Set (Π i : S, G i)) (hU_open : IsOpen U) (hU_compact : IsCompact U)
+  (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
+  : IsOpen X := sorry
+
+open ContinuousMulEquiv Classical in
+lemma mulEquivHaarChar_restrictedProductCongrRight_X_closed_subgoal [∀i, CompactSpace (G i)]
+[∀ i, T2Space (G i)] (φ : Π i, (G i) ≃ₜ* (G i))
+  (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+  (S : Set ι) (hS_finite : S.Finite) (hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)})
+  (X : Set (Πʳ i, [G i, C i]) ) (hX_def : X = {x | ∀ i ∉ S, x i ∈ C i})
+  (U : Set (Π i : S, G i)) (hU_open : IsOpen U) (hU_compact : IsCompact U)
+  (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
+  (i : ι) (hi : i ∉ S) : IsClosed {x | x i ∈ C i} := sorry
+
+open ContinuousMulEquiv Classical in
+lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact [∀i, CompactSpace (G i)]
+[∀ i, T2Space (G i)] (φ : Π i, (G i) ≃ₜ* (G i))
+  (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+  (S : Set ι) (hS_finite : S.Finite) (hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)})
+  (X : Set (Πʳ i, [G i, C i]) ) (hX_def : X = {x | ∀ i ∉ S, x i ∈ C i})
+  (U : Set (Π i : S, G i)) (hU_open : IsOpen U) (hU_compact : IsCompact U)
+  (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
+  : IsCompact X := by sorry
+  /- let GS := Π (i : S), G i.val
+  let σ := {i // i ∉ S}
+  let K_tail := Π (j : σ), ↥(C j.val)
+  let inc : GS × K_tail → Πʳ i, [G i, ↑(C i)] := fun (a, b) => ⟨fun (i : ι) => if h :
+  i ∈ S then a ⟨i, h⟩ else b ⟨i, h⟩.val, by
+    filter_upwards with i hi
+    split_ifs with h
+    · contradiction
+    · exact b ⟨i, hi⟩.prop⟩
+  have h_inc_cont : Continuous inc := by
+    apply continuous_subtype_mk
+    apply continuous_pi
+    intro i
+    by_cases hi : i ∈ S
+    · simp [hi]
+      exact continuous_apply ⟨i, hi⟩ |>.comp continuous_fst
+    · simp [hi]
+      exact continuous_subtype_val.comp (continuous_apply ⟨i, hi⟩ |>.comp continuous_snd)
+  have h_bij : BijOn inc Set.univ X := by
+    apply BijOn.mk
+    · intro _ _
+      simp [X]
+    · intro _ _ _ _ h
+      simp [Function.Injective.eq_iff] at h
+      ext1
+      ext i
+      exact h i.val
+    · intro x hx
+      use (fun i => x i.val, fun j => ⟨x j.val, hx j.val j.prop⟩)
+      simp
+      constructor
+      · simp
+      · ext k
+        by_cases hk : k ∈ S
+        · simp [hk]
+        · simp [hk]
+  have h_domain_compact : IsCompact (Set.univ : Set (GS × K_tail)) :=
+  (isCompact_pi fun _ => isCompact_univ).prod (isCompact_pi fun _ => isCompact_univ)
+  exact h_domain_compact.image h_inc_cont -/
+
+open ContinuousMulEquiv Classical in
+lemma mulEquivHaarChar_restrictedProductCongrRight_X_interior_nonempty [∀i, CompactSpace (G i)]
+[∀ i, T2Space (G i)] (φ : Π i, (G i) ≃ₜ* (G i))
+  (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+  (S : Set ι) (hS_finite : S.Finite) (hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)})
+  (X : Set (Πʳ i, [G i, C i]) ) (hX_def : X = {x | ∀ i ∉ S, x i ∈ C i})
+  (U : Set (Π i : S, G i)) (hU_open : IsOpen U) (hU_compact : IsCompact U)
+  (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
+  : (interior X).Nonempty := sorry
+
+open ContinuousMulEquiv Classical in
+lemma mulEquivHaarChar_restrictedProductCongrRight_eq_smul_compact [∀i, CompactSpace (G i)]
+[∀ i, T2Space (G i)] (φ : Π i, (G i) ≃ₜ* (G i))
+  (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+  (S : Set ι) (hS_finite : S.Finite) (hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)})
+  (X : Set (Πʳ i, [G i, C i]) ) (hX_def : X = {x | ∀ i ∉ S, x i ∈ C i})
+  (U : Set (Π i : S, G i)) (hU_open : IsOpen U) (hU_compact : IsCompact U)
+  (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
+  (c : ℝ≥0) (s : Set (Πʳ i, [G i, C i])) (hs_comp : IsCompact s) (hs_closed : IsClosed s) : (c • haar) s = c * haar s := sorry
+
+open ContinuousMulEquiv Classical in
 @[to_additive]
 lemma mulEquivHaarChar_restrictedProductCongrRight [∀i, CompactSpace (G i)] [∀ i, T2Space (G i)] (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)) :
@@ -508,7 +597,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight [∀i, CompactSpace (G i)] [�
     · ext x
       simp [X]
   obtain ⟨U, hU_open, hU_compact, hX_eq⟩ := this
-  have hX_open : IsOpen X := mulEquivHaarChar_restrictedProductCongrRight_X_open φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
+  have hX_open : IsOpen X := sorry -- mulEquivHaarChar_restrictedProductCongrRight_X_open φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
   have hX_closed : IsClosed X := by
     rw [hX_eq]
     rw [Set.setOf_and]
@@ -531,8 +620,8 @@ lemma mulEquivHaarChar_restrictedProductCongrRight [∀i, CompactSpace (G i)] [�
         simp [hi]
         sorry
         --exact mulEquivHaarChar_restrictedProductCongrRight_X_closed_subgoal φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq i hi
-  have hX_compact : IsCompact X := mulEquivHaarChar_restrictedProductCongrRight_X_compact φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
-  have hX_interior : (interior X).Nonempty := mulEquivHaarChar_restrictedProductCongrRight_X_interior_nonempty φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
+  have hX_compact : IsCompact X := sorry -- mulEquivHaarChar_restrictedProductCongrRight_X_compact φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
+  have hX_interior : (interior X).Nonempty := sorry -- mulEquivHaarChar_restrictedProductCongrRight_X_interior_nonempty φ hφ S hS_finite rfl X rfl U hU_open hU_compact hX_eq
   have hX_pos : 0 < haar X := IsOpen.measure_pos haar hX_open ⟨1, by simp [X, one_mem _]⟩
   have hX_fin : haar X < ∞ := hX_compact.measure_lt_top
   have hS : ∀ i ∉ S, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i) := fun i hi => Classical.not_not.mp (mt (fun h => Set.mem_setOf.mpr h) hi)
