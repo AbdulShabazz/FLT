@@ -3,7 +3,6 @@ import FLT.Mathlib.Topology.Algebra.ContinuousMonoidHom
 import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 import FLT.Mathlib.MeasureTheory.Measure.Regular
 import FLT.Mathlib.MeasureTheory.Group.Measure
---import FLT.Mathlib.Topology.Defs.Basiic
 
 open MeasureTheory.Measure
 open scoped NNReal
