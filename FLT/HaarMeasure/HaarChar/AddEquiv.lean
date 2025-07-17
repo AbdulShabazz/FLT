@@ -485,9 +485,39 @@ variable {ι : Type*}
     [∀ i, MeasurableSpace (G i)]
     [∀ i, BorelSpace (G i)]
 
+open Set Classical in
+noncomputable def structureMap [DecidableEq ι] (S : Finset ι) :
+    ((i : S) → G i) × ((i : {j : ι // j ∉ S}) → C i) → Πʳ i, [G i, C i] := sorry
+  /- fun ⟨f, g⟩ =>
+    ⟨fun i =>
+      if h : i ∈ S then f ⟨i, h⟩ else g ⟨i, by simpa using h⟩,
+      by
+        simp only [Filter.eventually_cofinite, Set.finite_setOf_isMin]
+        use S
+        intros i hi
+        simp only [Set.mem_setOf_eq]
+        rw [dif_neg hi]
+        exact (g ⟨i, hi⟩).prop⟩ -/
+
+lemma continuous_structureMap [DecidableEq ι] (S : Finset ι) :
+    letI : TopologicalSpace (Πʳ i, [G i, C i]) := inferInstance
+    Continuous (structureMap (G := G) (C := C) S) := by sorry
+  /- letI : TopologicalSpace (Πʳ i, [G i, C i]) := inferInstance
+  apply continuous_subtype_mk
+  apply continuous_pi
+  intro i
+  by_cases hi : i ∈ S
+  · simp [structureMap, hi]
+    exact (continuous_apply ⟨i, hi⟩).comp continuous_fst
+  · simp [structureMap, hi]
+    have : Continuous fun p : ((i : S) → G i) × ((i : {j : ι // j ∉ S}) → C i) =>
+        (p.2 ⟨i, hi⟩ : G i) :=
+      continuous_subtype_val.comp ((continuous_apply ⟨i, hi⟩).comp continuous_snd)
+    exact this -/
+
 open ContinuousMulEquiv Classical in
-@[to_additive]
-lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G i))
+--@[to_additive]
+lemma mulEquivHaarChar_restrictedProductCongrRight [∀ i, LocallyCompactSpace (G i)] (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)) :
     -- typeclass stuff
     letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
@@ -502,19 +532,28 @@ lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G 
   letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
   haveI : BorelSpace (Πʳ i, [G i, C i]) := ⟨rfl⟩
   -- Extract the finite set where φ doesn't preserve C
-  rw [Filter.eventually_cofinite] at hφ
+  --rw [Filter.eventually_cofinite] at hφ
   let S : Set ι := {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)}
-  have hS_finite : S.Finite := hφ
+  --have hS_finite : S.Finite := hφ
+  -- Extract the finite set where φ doesn't preserve C
+  have hS_finite : {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)}.Finite := by
+    rwa [← Filter.eventually_cofinite]
+  --let S : Set ι := {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)}
   -- Define the compact open subset X of the restricted product
   let X : Set (Πʳ i, [G i, C i]) := {x | ∀ i ∉ S, x i ∈ C i}
   -- X is the range of the structure map from ∏ i : S, G i × ∏ i ∉ S, C i
+
   have hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ (Set.univ : Set (Π i : S, G i.val)) ∧ ∀ i ∉ S, x i ∈ C i} := by
     ext x
     simp [X]
-  haveI : Fintype S := hS_finite.fintype
-  haveI : ∀ i, CompactSpace (G i) := sorry
 
+  haveI : Fintype S := hS_finite.fintype
+  letI σ := {i // i ∉ S}
+  letI K_tail := Π (j : σ), ↥(C j.val)
+  --letI : CompactSpace K_tail := ⟨isCompact_pi_infinite fun j => (hCcompact j.val).isCompact⟩
+  --haveI : ∀ i, CompactSpace (C i) := sorry
   -- Define X using the product structure more explicitly
+  haveI : CompactSpace (Π i : ↑S, G ↑i.val) := sorry
   have : ∃ (U : Set (Π i : S, G i)), IsOpen U ∧ IsCompact U ∧
     X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i} := by
     -- Take U to be the whole product over S
@@ -525,60 +564,78 @@ lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G 
     · exact isCompact_univ
     · ext x
       simp [X]
-
   -- Use this characterization to prove openness
   obtain ⟨U, hU_open, hU_compact, hX_eq⟩ := this
   --rw [hX_eq]
-  have hXcompact : IsCompact X := by
-    rw [hX_eq]
-    -- X = {x | (fun i ↦ x ↑i) ∈ U ∧ ∀ i ∉ S, x i ∈ C i}
-    -- This is the preimage of U × ∏_{i ∉ S} C i under a continuous map
 
-    -- First, let's identify this set more clearly
-    have : {x : Πʳ i, [G i, C i] | (fun i : S ↦ x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i} =
-      {x : Πʳ i, [G i, C i] | (fun i : S ↦ x i.val) ∈ U} ∩
-      {x : Πʳ i, [G i, C i] | ∀ i ∉ S, x i ∈ C i} := by
+  have hXcompact : IsCompact X := by sorry
+    /- rw [hX_eq]
+    letI : TopologicalSpace (Πʳ i, [G i, C i]) := inferInstance
+    have : {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i} =
+      structureMap S.toFinset '' (U ×ˢ Set.univ) := by
       ext x
-      simp only [Set.mem_inter_iff, Set.mem_setOf]
+      simp only [Set.mem_setOf_eq, Set.mem_image, Set.mem_prod, Set.mem_univ, and_true]
+      constructor
+      · intro ⟨hU, hC⟩
+        use (fun i : S => x i.val, fun i : {j // j ∉ S} => ⟨x i, hC i i.prop⟩)
+        simp [structureMap]
+        constructor
+        · exact hU
+        · ext i
+          by_cases hi : i ∈ S
+          · simp [hi]
+          · simp [hi]
+      · intro ⟨⟨f, g⟩, ⟨hf, _⟩, rfl⟩
+        simp [structureMap] at hf ⊢
+        constructor
+        · exact hf
+        · intro i hi
+          simp [hi]
+          exact (g ⟨i, hi⟩).prop
     rw [this]
-    -- Both sets in the intersection are compact
-    apply IsCompact.inter_right
-    -- First set: preimage of compact U under continuous projection
-    · have : {x : Πʳ i, [G i, C i] | (fun i : S ↦ x i.val) ∈ U} =
-        (fun x ↦ fun i : S ↦ x i.val) ⁻¹' U := rfl
-      rw [this]
-      apply IsCompact.preimage_continuous
-      · exact hU_compact
-      · -- The map x ↦ (fun i : S ↦ x i.val) is continuous
-        apply continuous_pi
-        intro i
-        -- Each component map is continuous
-        exact continuous_apply i.val
+    refine IsCompact.image ?_ (continuous_structureMap (G := G) (C := C) S.toFinset)
+    exact IsCompact.prod hU_compact (isCompact_univ_pi fun i ↦ (hCcompact i.1).isCompact) -/
+
   -- The key observation: on X, the restricted product isomorphism agrees with a finite product isomorphism
   have key : ∀ x ∈ X, ContinuousMulEquiv.restrictedProductCongrRight φ hφ x =
     ⟨fun i ↦ if i ∈ S then φ i (x i) else x i, ?_⟩ := by
     intro x hx
     ext i
     by_cases hi : i ∈ S
-    · simp [ContinuousMulEquiv.restrictedProductCongrRight, hi]
-    · simp only [ContinuousMulEquiv.restrictedProductCongrRight, MonoidHom.restrictedProductCongrRight,
-        RestrictedProduct.congrRight]
-      have : x i ∈ C i := hx i hi
-      have : φ i (x i) = x i := by
-        exact (hS i hi).bijOn_image.image_eq this
-      simp [this]
+    · sorry/- -- When i ∈ S, restrictedProductCongrRight applies φ i
+      simp only [ContinuousMulEquiv.restrictedProductCongrRight,
+                 ContinuousMulEquiv.mk_coe,
+                 MonoidHom.restrictedProductCongrRight_apply]
+      rfl -/
+    · -- When i ∉ S, we need to use that φ i preserves C i
+      sorry /- simp only [ContinuousMulEquiv.restrictedProductCongrRight,
+                 ContinuousMulEquiv.mk_coe,
+                 MonoidHom.restrictedProductCongrRight_apply]
+      have hx_in_C : x i ∈ C i := hx i hi
+      have hφ_preserves : Set.BijOn (φ i) (C i) (C i) := by
+        contrapose! hi
+        exact hi
+      rw [if_neg hi]
+      exact (hφ_preserves.bijOn_image.image_eq hx_in_C).symm -/
   -- Use the fact that X is a compact open set with positive finite Haar measure
+
+  have hXopen : IsOpen X := by
+  -- X is open because it's a basic open set in the restricted product topology
+    sorry -- or prove using the restricted product topology structure
+
   have hXpos : (0 : ℝ≥0∞) < haar X := by
     apply IsOpen.measure_pos haar hXopen
     use 1
     simp [X]
     intro i _
     exact one_mem _
+
   have hXfin : haar X < ∞ := hXcompact.measure_lt_top
+
   -- Apply the characterization of mulEquivHaarChar via scaling on open sets
-  suffices mulEquivHaarChar (.restrictedProductCongrRight φ hφ) * haar X =
-    (∏ᶠ i, mulEquivHaarChar (φ i)) * haar X by
-    exact ENNReal.mul_right_inj (ne_of_gt hXpos) hXfin.ne |>.mp this
+  suffices h₀ : mulEquivHaarChar (.restrictedProductCongrRight φ hφ) =
+             ∏ᶠ i, mulEquivHaarChar (φ i) by
+    rw [h₀]
   -- Use the fact that on X, the isomorphism factors through a finite product
   calc mulEquivHaarChar (.restrictedProductCongrRight φ hφ) * haar X
     _ = haar ((.restrictedProductCongrRight φ hφ) '' X) := by
