@@ -635,49 +635,49 @@ lemma mulEquivHaarChar_restrictedProductCongrRight [∀ i, LocallyCompactSpace (
   -- Apply the characterization of mulEquivHaarChar via scaling on open sets
   suffices h₀ : mulEquivHaarChar (.restrictedProductCongrRight φ hφ) =
              ∏ᶠ i, mulEquivHaarChar (φ i) by
-    rw [h₀]
-  -- Use the fact that on X, the isomorphism factors through a finite product
+    --rw [h₀]
+    -- Use the fact that on X, the isomorphism factors through a finite product
   calc mulEquivHaarChar (.restrictedProductCongrRight φ hφ) * haar X
-    _ = haar ((.restrictedProductCongrRight φ hφ) '' X) := by
-        rw [← mulEquivHaarChar_map_open haar _ hXopen, smul_apply, nnreal_smul_coe_apply]
-    _ = haar {x | ∀ i ∉ S, x i ∈ C i} := by
-        congr 1
+  _ = haar ((.restrictedProductCongrRight φ hφ) '' X) := by
+      rw [← mulEquivHaarChar_map_open haar _ hXopen, smul_apply, nnreal_smul_coe_apply]
+  _ = haar {x | ∀ i ∉ S, x i ∈ C i} := by
+      congr 1
+      ext x
+      simp only [Set.mem_image, X, Set.mem_setOf]
+      refine ⟨fun ⟨y, hy, rfl⟩ i hi ↦ ?_, fun hx ↦ ?_⟩
+      · simp only [ContinuousMulEquiv.coe_mk, Equiv.coe_fn_mk]
+        split_ifs with h
+        · contradiction
+        · exact hy i hi
+      · refine ⟨(.restrictedProductCongrRight φ hφ).symm x, fun i hi ↦ ?_, ?_⟩
+        · simp only [ContinuousMulEquiv.restrictedProductCongrRight, ContinuousMulEquiv.symm_mk,
+            MulEquiv.symm_mk, Equiv.coe_fn_symm_mk]
+          exact (hS i hi).mapsTo (hx i hi)
+        · simp
+  _ = (∏ i ∈ S, mulEquivHaarChar (φ i)) * haar X := by
+      rw [← finprod_eq_prod_of_fintype]
+      -- Apply the finite product case (mulEquivHaarChar_piCongrRight) here, as S is finite.
+      exact mulEquivHaarChar_piCongrRight (fun i => φ i)
+  _ = (∏ᶠ i, mulEquivHaarChar (φ i)) * haar X := by
+      congr 1
+      apply finprod_eq_prod_of_subset
+      intro i hi
+      simp only [Set.mem_compl_iff, Set.mem_setOf] at hi
+      push_neg at hi
+      -- hi : Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)
+      have h_preimage : ⇑(φ i) ⁻¹' ↑(C i) = ↑(C i) := by
         ext x
-        simp only [Set.mem_image, X, Set.mem_setOf]
-        refine ⟨fun ⟨y, hy, rfl⟩ i hi ↦ ?_, fun hx ↦ ?_⟩
-        · have := key y hy
-          simp only [ContinuousMulEquiv.coe_mk, Equiv.coe_fn_mk] at this
-          rw [this]
-          split_ifs with h
-          · contradiction
-          · exact hy i hi
-        · refine ⟨(.restrictedProductCongrRight φ hφ).symm x, fun i hi ↦ ?_, ?_⟩
-          · simp only [ContinuousMulEquiv.restrictedProductCongrRight, ContinuousMulEquiv.symm_mk,
-              MulEquiv.symm_mk, Equiv.coe_fn_symm_mk]
-            have : x i ∈ C i := hx i hi
-            have bij := hS i hi
-            rw [← bij.bijOn_image.image_eq this]
-            exact bij.mapsTo this
-          · simp
-    _ = (∏ i ∈ S, mulEquivHaarChar (φ i)) * haar X := by
-        rw [← finprod_eq_prod_of_fintype]
-        -- This follows from the finite product case
-        sorry -- Apply mulEquivHaarChar_piCongrRight for the finite set S
-    _ = (∏ᶠ i, mulEquivHaarChar (φ i)) * haar X := by
-        congr 1
-        apply finprod_eq_prod_of_subset
-        intro i hi
-        simp only [Set.mem_compl_iff, Set.mem_setOf] at hi
-        push_neg at hi
-        have : φ i = ContinuousMulEquiv.refl (G i) := by
-          ext x
-          have : x ∈ C i ∨ x ∉ C i := em _
-          cases this with
-          | inl h => exact (hS i hi).bijOn_image.image_eq h
-          | inr h =>
-            -- Both sides equal x since φ i is a group isomorphism
-            rfl
-        rw [this, mulEquivHaarChar_refl]
+        refine ⟨fun h => ?_, fun h => hi.mapsTo h⟩
+        obtain ⟨y, hy, rfl⟩ := hi.surj h
+        exact (φ i).injective rfl ▸ hy
+      have h_d : mulEquivHaarChar (φ i) * haar (⇑(φ i) ⁻¹' ↑(C i)) = haar ↑(C i) := by
+        rw [mulEquivHaarChar_smul_preimage haar ↑(C i)]
+      rw [h_preimage] in h_d
+      have h_pos_fin : 0 < haar ↑(C i) ∧ haar ↑(C i) < ∞ := by
+        refine ⟨(isHaarMeasure_haarMeasure _).open_pos_of_isOpen_nonempty (hCopen.out i) ⟨1, Subgroup.one_mem _⟩,
+                (isHaarMeasure_haarMeasure _).lt_top_of_isCompact (hCcompact i).isCompact⟩
+      linarith [h_d, h_pos_fin.1.ne.symm]
+  --exact NNReal.coe_injective ((ENNReal.mul_left_inj' hX_ne_zero hX_ne_top).mp rfl)
   sorry -- Complete the finite product calculation -- FLT#552
 
 end restrictedproduct
