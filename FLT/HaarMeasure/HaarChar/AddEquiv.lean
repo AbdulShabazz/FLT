@@ -3,6 +3,8 @@ import FLT.Mathlib.Topology.Algebra.ContinuousMonoidHom
 import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 import FLT.Mathlib.MeasureTheory.Measure.Regular
 import FLT.Mathlib.MeasureTheory.Group.Measure
+import Mathlib.Topology.Compactness.Bases
+import Mathlib.Topology.Compactness.Compact
 
 open MeasureTheory.Measure
 open scoped NNReal
@@ -470,6 +472,10 @@ lemma _root_.WeaklyLocallyCompactSpace.of_isTopologicalGroup_of_isOpen_compactSp
       hCopen.out |>.smul _ |>.mem_nhds <| by
       simpa using Set.smul_mem_smul_set (a := x) (one_mem C)⟩
 
+--import Mathlib.Topology.QuasiSeparated
+lemma isCompact_inter {ι : Type*} {α β : Type*} [TopologicalSpace α]
+[TopologicalSpace β] {f : α → β}{b : ι → Set α} : ∀ i j, IsCompact (b i ∩ b j) := sorry
+
 variable {ι : Type*}
     {G : ι → Type*}
     [Π i, Group (G i)] [Π i, TopologicalSpace (G i)] [∀ i, IsTopologicalGroup (G i)]
@@ -502,19 +508,11 @@ lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G 
   -- Define the compact open subset X of the restricted product
   let X : Set (Πʳ i, [G i, C i]) := {x | ∀ i ∉ S, x i ∈ C i}
   -- X is the range of the structure map from ∏ i : S, G i × ∏ i ∉ S, C i
-  /- have hX_eq : X = Set.range (structureMap G (fun i ↦ (C i : Set (G i))) Filter.cofinite ∘
-    fun f i ↦ if hi : i ∈ S then f.1 ⟨i, hi⟩ else f.2 ⟨i, hi⟩) := by
+  have hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ (Set.univ : Set (Π i : S, G i.val)) ∧ ∀ i ∉ S, x i ∈ C i} := by
     ext x
-    simp only [X, Set.mem_setOf, Set.mem_range, Function.comp_apply, structureMap_apply]
-    refine ⟨fun hx ↦ ?_, fun ⟨f, hf⟩ i hi ↦ ?_⟩
-    · use (fun i ↦ x i.1, fun i ↦ x i.1)
-      ext i
-      split_ifs <;> rfl
-    · rw [← hf]
-      simp [hi] -/
-  -- X is open by properties of the structure map
-  -- Since S is finite, we can work more explicitly
+    simp [X]
   haveI : Fintype S := hS_finite.fintype
+  haveI : ∀ i, CompactSpace (G i) := sorry
 
   -- Define X using the product structure more explicitly
   have : ∃ (U : Set (Π i : S, G i)), IsOpen U ∧ IsCompact U ∧
@@ -524,25 +522,38 @@ lemma mulEquivHaarChar_restrictedProductCongrRight (φ : Π i, (G i) ≃ₜ* (G 
     constructor
     · exact isOpen_univ
     constructor
-    · exact isCompact_pi_infinite
-
-      -- The new goal is to show that each component space is compact.
-      -- Goal: `∀ (i : S), IsCompact (Set.univ : Set (G i))`
-      intro i
-
-      -- We can now use `infer_instance` on this simpler, non-typeclass goal.
-      -- This will find the top-level `[CompactSpace (G i)]` instance from the
-      -- lemma's signature and extract the proposition `IsCompact Set.univ` from it.
-      exact (inferInstance : CompactSpace (G i)).isCompact_univ
+    · exact isCompact_univ
     · ext x
       simp [X]
+
   -- Use this characterization to prove openness
   obtain ⟨U, hU_open, hU_compact, hX_eq⟩ := this
-  rw [hX_eq]
+  --rw [hX_eq]
   have hXcompact : IsCompact X := by
     rw [hX_eq]
-    refine IsCompact.image ?_ (continuous_structureMap _ _ _)
-    exact IsCompact.prod (isCompact_pi_finite _) (isCompact_univ_pi fun i ↦ (hCcompact i.1).isCompact)
+    -- X = {x | (fun i ↦ x ↑i) ∈ U ∧ ∀ i ∉ S, x i ∈ C i}
+    -- This is the preimage of U × ∏_{i ∉ S} C i under a continuous map
+
+    -- First, let's identify this set more clearly
+    have : {x : Πʳ i, [G i, C i] | (fun i : S ↦ x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i} =
+      {x : Πʳ i, [G i, C i] | (fun i : S ↦ x i.val) ∈ U} ∩
+      {x : Πʳ i, [G i, C i] | ∀ i ∉ S, x i ∈ C i} := by
+      ext x
+      simp only [Set.mem_inter_iff, Set.mem_setOf]
+    rw [this]
+    -- Both sets in the intersection are compact
+    apply IsCompact.inter_right
+    -- First set: preimage of compact U under continuous projection
+    · have : {x : Πʳ i, [G i, C i] | (fun i : S ↦ x i.val) ∈ U} =
+        (fun x ↦ fun i : S ↦ x i.val) ⁻¹' U := rfl
+      rw [this]
+      apply IsCompact.preimage_continuous
+      · exact hU_compact
+      · -- The map x ↦ (fun i : S ↦ x i.val) is continuous
+        apply continuous_pi
+        intro i
+        -- Each component map is continuous
+        exact continuous_apply i.val
   -- The key observation: on X, the restricted product isomorphism agrees with a finite product isomorphism
   have key : ∀ x ∈ X, ContinuousMulEquiv.restrictedProductCongrRight φ hφ x =
     ⟨fun i ↦ if i ∈ S then φ i (x i) else x i, ?_⟩ := by
