@@ -516,8 +516,9 @@ lemma continuous_structureMap [DecidableEq ι] (S : Finset ι) :
     exact this -/
 
 open ContinuousMulEquiv Classical in
---@[to_additive]
-lemma mulEquivHaarChar_restrictedProductCongrRight [∀ i, LocallyCompactSpace (G i)] (φ : Π i, (G i) ≃ₜ* (G i))
+@[to_additive]
+lemma mulEquivHaarChar_restrictedProductCongrRight
+[∀ i, LocallyCompactSpace (G i)] (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)) :
     -- typeclass stuff
     letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
@@ -543,7 +544,8 @@ lemma mulEquivHaarChar_restrictedProductCongrRight [∀ i, LocallyCompactSpace (
   let X : Set (Πʳ i, [G i, C i]) := {x | ∀ i ∉ S, x i ∈ C i}
   -- X is the range of the structure map from ∏ i : S, G i × ∏ i ∉ S, C i
 
-  have hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ (Set.univ : Set (Π i : S, G i.val)) ∧ ∀ i ∉ S, x i ∈ C i} := by
+  have hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈
+  (Set.univ : Set (Π i : S, G i.val)) ∧ ∀ i ∉ S, x i ∈ C i} := by
     ext x
     simp [X]
 
@@ -596,7 +598,8 @@ lemma mulEquivHaarChar_restrictedProductCongrRight [∀ i, LocallyCompactSpace (
     refine IsCompact.image ?_ (continuous_structureMap (G := G) (C := C) S.toFinset)
     exact IsCompact.prod hU_compact (isCompact_univ_pi fun i ↦ (hCcompact i.1).isCompact) -/
 
-  -- The key observation: on X, the restricted product isomorphism agrees with a finite product isomorphism
+  -- The key observation: on X, the restricted product isomorphism
+  -- agrees with a finite product isomorphism
   have key : ∀ x ∈ X, ContinuousMulEquiv.restrictedProductCongrRight φ hφ x =
     ⟨fun i ↦ if i ∈ S then φ i (x i) else x i, ?_⟩ := by
     intro x hx
@@ -633,52 +636,168 @@ lemma mulEquivHaarChar_restrictedProductCongrRight [∀ i, LocallyCompactSpace (
   have hXfin : haar X < ∞ := hXcompact.measure_lt_top
 
   -- Apply the characterization of mulEquivHaarChar via scaling on open sets
-  suffices h₀ : mulEquivHaarChar (.restrictedProductCongrRight φ hφ) =
-             ∏ᶠ i, mulEquivHaarChar (φ i) by
-    --rw [h₀]
-    -- Use the fact that on X, the isomorphism factors through a finite product
-  calc mulEquivHaarChar (.restrictedProductCongrRight φ hφ) * haar X
-  _ = haar ((.restrictedProductCongrRight φ hφ) '' X) := by
-      rw [← mulEquivHaarChar_map_open haar _ hXopen, smul_apply, nnreal_smul_coe_apply]
-  _ = haar {x | ∀ i ∉ S, x i ∈ C i} := by
-      congr 1
-      ext x
+  suffices (mulEquivHaarChar (.restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X =
+    (∏ᶠ i, mulEquivHaarChar (φ i) : ℝ≥0∞) * haar X by sorry
+    --exact ENNReal.mul_right_inj (ne_of_gt hXpos) hXfin.ne |>.mp this
+
+  -- First show that the automorphism preserves X
+  have h_preserves_X : (restrictedProductCongrRight φ hφ) '' X = X := by sorry
+    /- ext y
+    simp only [Set.mem_image, X, Set.mem_setOf]
+    constructor
+    · intro ⟨x, hx, rfl⟩ i hi
+      -- When i ∉ S, φ i preserves C i
+      have hφ_preserves : Set.BijOn (φ i) (C i) (C i) := by
+        contrapose! hi
+        exact hi
+      convert hφ_preserves.mapsTo (hx i hi) using 1
+      -- Need to show how restrictedProductCongrRight applies φ
+      simp only [ContinuousMulEquiv.coe_mk, MonoidHom.coe_mk]
+      rw [MonoidHom.restrictedProductCongrRight_apply]
+      simp [hi]
+    · intro hy
+      use (restrictedProductCongrRight φ hφ).symm y
+      constructor
+      · intro i hi
+        -- Apply the inverse and use that it preserves the property
+        have : ((restrictedProductCongrRight φ hφ).symm y) i ∈ C i := by
+          have hφ_preserves : Set.BijOn (φ i) (C i) (C i) := by
+            contrapose! hi
+            exact hi
+          convert hφ_preserves.surjOn (hy i hi) using 1
+          simp only [ContinuousMulEquiv.symm_apply_apply]
+          rw [← MonoidHom.restrictedProductCongrRight_apply]
+          simp
+        exact this
+      · simp -/
+
+  -- Now use the fact that mulEquivHaarChar scales the measure appropriately
+  have h1 : (mulEquivHaarChar (restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X =
+          haar ((restrictedProductCongrRight φ hφ) '' X) := by sorry
+    /- rw [← mulEquivHaarChar_map_open haar _ hXopen]
+    simp only [smul_apply, nnreal_smul_coe_apply] -/
+
+  -- Since the automorphism preserves X, we have
+  rw [h1, h_preserves_X]
+
+  -- Now we need to show that ∏ᶠ i, mulEquivHaarChar (φ i) = 1
+  have h2 : (∏ᶠ i, mulEquivHaarChar (φ i) : ℝ≥0∞) = 1 := by sorry
+    /- rw [← ENNReal.coe_one]
+    congr 1
+    apply finprod_eq_one
+    intro i
+    by_cases hi : i ∈ S
+    · simp [hi]
+    · -- For i ∉ S, φ i preserves C i, so its Haar character on C i is 1
+      have hφ_preserves : Set.BijOn (φ i) (C i) (C i) := by
+        contrapose! hi
+        exact hi
+      -- The Haar character of φ i equals 1 because it preserves the compact open subgroup C i
+      have : mulEquivHaarChar ((φ i).subgroupMap (C i) hφ_preserves) = 1 := by
+        apply mulEquivHaarChar_eq_one_of_compactSpace
+      -- The Haar character on G i equals the one on the open subgroup C i
+      have : mulEquivHaarChar (φ i) = 1 := by
+        rw [← this]
+        apply mulEquivHaarChar_eq_mulEquivHaarChar_of_isOpenEmbedding
+        · exact (hCopen.out i).isOpenEmbedding_subtype
+        · intro x; rfl
+      exact this -/
+
+  rw [h2, one_mul]
+
+  -- First prove the key equality in ℝ≥0∞
+  have h_eq : (mulEquivHaarChar (restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X =
+              (∏ᶠ i, mulEquivHaarChar (φ i) : ℝ≥0∞) * haar X := by sorry
+    /- -- First show that restrictedProductCongrRight φ hφ preserves X
+    have h_preserves : (restrictedProductCongrRight φ hφ) '' X = X := by
+      ext y
       simp only [Set.mem_image, X, Set.mem_setOf]
-      refine ⟨fun ⟨y, hy, rfl⟩ i hi ↦ ?_, fun hx ↦ ?_⟩
-      · simp only [ContinuousMulEquiv.coe_mk, Equiv.coe_fn_mk]
+      constructor
+      · intro ⟨x, hx, rfl⟩ i hi
+        -- Use the key lemma
+        rw [key x hx]
+        simp only [Subtype.coe_mk]
         split_ifs with h
         · contradiction
-        · exact hy i hi
-      · refine ⟨(.restrictedProductCongrRight φ hφ).symm x, fun i hi ↦ ?_, ?_⟩
-        · simp only [ContinuousMulEquiv.restrictedProductCongrRight, ContinuousMulEquiv.symm_mk,
-            MulEquiv.symm_mk, Equiv.coe_fn_symm_mk]
-          exact (hS i hi).mapsTo (hx i hi)
+        · exact hx i hi
+      · intro hy
+        use (restrictedProductCongrRight φ hφ).symm y
+        constructor
+        · intro i hi
+          -- φ i preserves C i for i ∉ S
+          have hφ_preserves : Set.BijOn (φ i) (C i) (C i) := by
+            contrapose! hi
+            exact hi
+          -- The inverse preserves the property
+          sorry -- This needs the detailed computation of how symm acts
         · simp
-  _ = (∏ i ∈ S, mulEquivHaarChar (φ i)) * haar X := by
-      rw [← finprod_eq_prod_of_fintype]
-      -- Apply the finite product case (mulEquivHaarChar_piCongrRight) here, as S is finite.
-      exact mulEquivHaarChar_piCongrRight (fun i => φ i)
-  _ = (∏ᶠ i, mulEquivHaarChar (φ i)) * haar X := by
+
+    -- Show the finitary product equals 1
+    have h_prod : (∏ᶠ i, mulEquivHaarChar (φ i) : ℝ≥0∞) = 1 := by sorry
+       rw [ENNReal.coe_finprod, ← ENNReal.coe_one]
       congr 1
-      apply finprod_eq_prod_of_subset
-      intro i hi
-      simp only [Set.mem_compl_iff, Set.mem_setOf] at hi
-      push_neg at hi
-      -- hi : Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)
-      have h_preimage : ⇑(φ i) ⁻¹' ↑(C i) = ↑(C i) := by
-        ext x
-        refine ⟨fun h => ?_, fun h => hi.mapsTo h⟩
-        obtain ⟨y, hy, rfl⟩ := hi.surj h
-        exact (φ i).injective rfl ▸ hy
-      have h_d : mulEquivHaarChar (φ i) * haar (⇑(φ i) ⁻¹' ↑(C i)) = haar ↑(C i) := by
-        rw [mulEquivHaarChar_smul_preimage haar ↑(C i)]
-      rw [h_preimage] in h_d
-      have h_pos_fin : 0 < haar ↑(C i) ∧ haar ↑(C i) < ∞ := by
-        refine ⟨(isHaarMeasure_haarMeasure _).open_pos_of_isOpen_nonempty (hCopen.out i) ⟨1, Subgroup.one_mem _⟩,
-                (isHaarMeasure_haarMeasure _).lt_top_of_isCompact (hCcompact i).isCompact⟩
-      linarith [h_d, h_pos_fin.1.ne.symm]
-  --exact NNReal.coe_injective ((ENNReal.mul_left_inj' hX_ne_zero hX_ne_top).mp rfl)
-  sorry -- Complete the finite product calculation -- FLT#552
+      apply finprod_eq_one
+      intro i
+      by_cases hi : i ∈ S
+      · simp [hi]
+      · -- For i ∉ S, φ i preserves C i
+        have hφ_preserves : Set.BijOn (φ i) (C i) (C i) := by
+          contrapose! hi
+          exact hi
+        -- The restriction of φ i to C i has Haar character 1
+        have h_compact : mulEquivHaarChar ((φ i).subgroupMap (C i) hφ_preserves) = 1 := by
+          apply mulEquivHaarChar_eq_one_of_compactSpace
+        -- The Haar character on G i equals the one on the open subgroup C i
+        have : mulEquivHaarChar (φ i) = mulEquivHaarChar ((φ i).subgroupMap (C i) hφ_preserves) := by
+          apply mulEquivHaarChar_eq_mulEquivHaarChar_of_isOpenEmbedding
+          · exact (hCopen.out i).isOpenEmbedding_subtype
+          · intro x; rfl
+        rw [this, h_compact]
+
+    -- Now use that the automorphism preserves X
+    calc (mulEquivHaarChar (restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X
+        = haar ((restrictedProductCongrRight φ hφ) '' X) := by sorry
+           have hXopen' : IsOpen X := by
+            -- X is open because it's a basic open set in the restricted product topology
+              sorry
+          rw [← mulEquivHaarChar_map_open haar _ hXopen']
+          simp [smul_apply, nnreal_smul_coe_apply]
+        _ = haar X := by rw [h_preserves]
+        _ = 1 * haar X := by rw [one_mul]
+        _ = (∏ᶠ i, mulEquivHaarChar (φ i) : ℝ≥0∞) * haar X := by rw [← h_prod] -/
+
+  -- We'll prove this by showing both sides are equal to 1
+  -- First, show the finitary product equals 1
+  have h_prod_one : ∏ᶠ i, mulEquivHaarChar (φ i) = 1 := by sorry
+    /- apply finprod_eq_one
+    intro i
+    by_cases hi : i ∈ S
+    · simp [hi]
+    · -- For i ∉ S, φ i preserves C i
+      have hφ_preserves : Set.BijOn (φ i) (C i) (C i) := by
+        contrapose! hi
+        exact hi
+      -- The restriction to the compact open subgroup has Haar character 1
+      have : mulEquivHaarChar ((φ i).subgroupMap (C i) hφ_preserves) = 1 := by
+        apply mulEquivHaarChar_eq_one_of_compactSpace
+      -- The Haar character on the whole group equals the one on the open subgroup
+      have : mulEquivHaarChar (φ i) = mulEquivHaarChar ((φ i).subgroupMap (C i) hφ_preserves) := by
+        apply mulEquivHaarChar_eq_mulEquivHaarChar_of_isOpenEmbedding
+        · exact (hCopen.out i).isOpenEmbedding_subtype
+        · intro x; rfl
+      rw [this]
+      exact mulEquivHaarChar_eq_one_of_compactSpace -/
+
+  -- Now show the left side also equals 1
+  -- The key insight is that restrictedProductCongrRight φ hφ acts as identity outside S
+  -- and preserves the structure, so its Haar character should be 1
+  have h_left_one : mulEquivHaarChar (restrictedProductCongrRight φ hφ) = 1 := by
+    -- This requires showing that the automorphism preserves some compact open set
+    -- Since X is compact open and preserved by the automorphism, we can use it
+    -- This would require a lemma about Haar characters of automorphisms preserving compact opens
+    sorry
+
+  rw [h_left_one, h_prod_one] -- FLT#552
 
 end restrictedproduct
 
