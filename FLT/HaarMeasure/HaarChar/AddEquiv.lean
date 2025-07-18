@@ -573,7 +573,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
 
   -- Now we need to show haar X = (∏ᶠ i, mulEquivHaarChar (φ i)) * haar X
   calc (mulEquivHaarChar (.restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X
-      = haar ((restrictedProductCongrRight φ hφ) '' X) := by
+      = haar ((.restrictedProductCongrRight φ hφ) '' X) := by
         rw [← mulEquivHaarChar_map_open haar _ hXopen]
         simp only [smul_apply, nnreal_smul_coe_apply]
       _ = haar X := by rw [h_preserves_X]
