@@ -538,32 +538,41 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
   have hS_finite : S.Finite := by
     rwa [← Filter.eventually_cofinite]
 
-  -- Show the finitary product equals 1
-  have h_prod_one : ∏ᶠ i, mulEquivHaarChar (φ i) = 1 := by sorry
-    /- apply finprod_eq_one
-    intro i
-    by_cases hi : i ∈ S
-    · simp [hi]
-    · -- For i ∉ S, φ i preserves C i
-      have hφ_preserves : Set.BijOn (φ i) (C i) (C i) := by
-        contrapose! hi
-        exact hi
-      -- The restriction to the compact open subgroup has Haar character 1
-      have : mulEquivHaarChar ((φ i).subgroupMap (C i) hφ_preserves) = 1 := by
-        apply mulEquivHaarChar_eq_one_of_compactSpace
-      -- The Haar character on the whole group equals the one on the open subgroup
-      have : mulEquivHaarChar (φ i) = mulEquivHaarChar ((φ i).subgroupMap (C i) hφ_preserves) := by
-        apply mulEquivHaarChar_eq_mulEquivHaarChar_of_isOpenEmbedding
-        · exact (hCopen.out i).isOpenEmbedding_subtype
-        · intro x; rfl
-      rw [this]
-      exact mulEquivHaarChar_eq_one_of_compactSpace -/
+  -- Define the compact open subset X of the restricted product
+  let X : Set (Πʳ i, [G i, C i]) := {x | ∀ i ∉ S, x i ∈ C i}
 
-  -- Show the left side also equals 1
-  have h_left_one : mulEquivHaarChar (restrictedProductCongrRight φ hφ) = 1 := by
-    sorry
+  have hXcompact : IsCompact X := by sorry
 
-  rw [h_left_one, h_prod_one] -- FLT#552
+  have hXopen : IsOpen X := by sorry
+
+  have hXpos : (0 : ℝ≥0∞) < haar X := by
+    apply IsOpen.measure_pos haar hXopen
+    use 1
+    simp [X]
+    intro i _
+    exact one_mem _
+
+  have hXfin : haar X < ∞ := hXcompact.measure_lt_top
+
+  -- Apply the characterization of mulEquivHaarChar via scaling on open sets
+  suffices (mulEquivHaarChar (.restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X =
+    (∏ᶠ i, mulEquivHaarChar (φ i) : ℝ≥0∞) * haar X by
+    exact ENNReal.mul_right_inj (ne_of_gt hXpos) hXfin.ne |>.mp this
+
+  -- First show that the automorphism preserves X
+  have h_preserves_X : (restrictedProductCongrRight φ hφ) '' X = X := by sorry
+
+  -- Now use the fact that mulEquivHaarChar scales the measure appropriately
+  have h1 : (mulEquivHaarChar (restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X =
+          haar ((restrictedProductCongrRight φ hφ) '' X) := by
+    rw [← mulEquivHaarChar_map_open haar _ hXopen]
+    simp only [smul_apply, nnreal_smul_coe_apply]
+
+  -- Since the automorphism preserves X, we have
+  rw [h1, h_preserves_X]
+
+  -- Now we need to show haar X = (∏ᶠ i, mulEquivHaarChar (φ i)) * haar X
+  sorry -- FLT#552
 
 end restrictedproduct
 
