@@ -548,7 +548,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
   have hXpos : (0 : ℝ≥0∞) < haar X := by
     apply IsOpen.measure_pos haar hXopen
     use 1
-    simp [X]
+    simp only [X, Set.mem_setOf]
     intro i _
     exact one_mem _
 
