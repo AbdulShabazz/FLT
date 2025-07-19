@@ -485,9 +485,11 @@ variable {ι : Type*}
     [∀ i, MeasurableSpace (G i)]
     [∀ i, BorelSpace (G i)]
 
+--lemma restrictedProduct_subset_measure_open
+
 omit [∀ (i : ι), BorelSpace (G i)] [∀ i, MeasurableSpace (G i)] in
 --@[to_additive, simp]
-lemma restrictedProduct_subset_measure_pos
+lemma restrictedProduct_subset_measure_open_pos
   [∀ i, LocallyCompactSpace (G i)]
   [∀i, CompactSpace (G i)]
   (φ : Π i, (G i) ≃ₜ* (G i))
@@ -526,9 +528,9 @@ lemma restrictedProduct_subset_eq_prod_subset
   use Set.univ
   -- The proof now splits into three goals: IsOpen, IsCompact, and the set equality.
   refine ⟨isOpen_univ, ?_, by simp⟩
-  -- Proof that `Set.univ` is compact.
+  -- Proof that `Set.univ` is compact:
   -- Tychonoff's theorem (`isCompact_univ`) states that a product space is compact
-  -- if each of its component spaces is compact.
+  --   if each of its component spaces is compact.
   --haveI : Fintype S := fintype
   exact isCompact_univ
 
@@ -567,22 +569,19 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
     ∏ᶠ i, mulEquivHaarChar (φ i) := by
   letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
   haveI : BorelSpace (Πʳ i, [G i, C i]) := ⟨rfl⟩
-
   -- Extract the finite set where φ doesn't preserve C
   let S : Set ι := {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)}
   have hS_finite : S.Finite := by
     rwa [← Filter.eventually_cofinite]
-
   -- Define the compact open subset X of the restricted product
   let X : Set (Πʳ i, [G i, C i]) := {x | ∀ i ∉ S, x i ∈ C i}
 
+  -- todo: lemma restrictedProduct_subset_measure_open
   have hXopen : IsOpen X := by sorry
 
   obtain ⟨U, hU_open, hU_compact, hX_eq⟩ :=
     restrictedProduct_subset_eq_prod_subset hCopen hCcompact S hS_finite
-
   have hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)} := rfl
-
   have hX_def : X = {x | ∀ i ∉ S, x i ∈ C i} := rfl
 
   have hXcompact : IsCompact X :=
@@ -590,8 +589,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       φ hφ S hS_finite hS_def X hX_def U hU_open hU_compact hX_eq
 
   have hXpos : (0 : ℝ≥0∞) < haar X :=
-    restrictedProduct_subset_measure_pos φ S X hX_def hXopen
-
+    restrictedProduct_subset_measure_open_pos φ S X hX_def hXopen
   have hXfin : haar X < ∞ := hXcompact.measure_lt_top
 
   -- Apply the characterization of mulEquivHaarChar via scaling on open sets
