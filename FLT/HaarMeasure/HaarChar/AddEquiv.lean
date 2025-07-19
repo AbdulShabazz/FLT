@@ -485,6 +485,28 @@ variable {ι : Type*}
     [∀ i, MeasurableSpace (G i)]
     [∀ i, BorelSpace (G i)]
 
+omit [∀ (i : ι), BorelSpace (G i)] [∀ i, MeasurableSpace (G i)] in
+--@[to_additive, simp]
+lemma restrictedProduct_subset_measure_pos
+  [∀ i, LocallyCompactSpace (G i)]
+  [∀i, CompactSpace (G i)]
+  (φ : Π i, (G i) ≃ₜ* (G i))
+    [∀ i, MeasurableSpace (G i)]
+    (S : Set ι := {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)})
+    (X : Set (Πʳ i, [G i, C i]))
+    (hXdef : X = {x | ∀ i ∉ S, x i ∈ C i})
+    (hXopen : IsOpen X) :
+    letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
+    haveI : BorelSpace (Πʳ i, [G i, C i]) := ⟨rfl⟩
+    (0 : ℝ≥0∞) < haar X := by
+  letI : MeasurableSpace (Πʳ i, [G i, C i]) := borel _
+  haveI : BorelSpace (Πʳ i, [G i, C i]) := ⟨rfl⟩
+  apply IsOpen.measure_pos haar hXopen
+  use 1
+  simp only [hXdef, Set.mem_setOf]
+  intro i _
+  exact one_mem _
+
 omit [∀ (i : ι), IsTopologicalGroup (G i)] [∀ (i : ι), BorelSpace (G i)]
 [Π i, TopologicalSpace (G i)] [∀ i, MeasurableSpace (G i)] in
 @[to_additive, simp]
@@ -567,12 +589,8 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
     mulEquivHaarChar_restrictedProductCongrRight_X_compact
       φ hφ S hS_finite hS_def X hX_def U hU_open hU_compact hX_eq
 
-  have hXpos : (0 : ℝ≥0∞) < haar X := by
-    apply IsOpen.measure_pos haar hXopen
-    use 1
-    simp only [X, Set.mem_setOf]
-    intro i _
-    exact one_mem _
+  have hXpos : (0 : ℝ≥0∞) < haar X :=
+    restrictedProduct_subset_measure_pos φ S X hX_def hXopen
 
   have hXfin : haar X < ∞ := hXcompact.measure_lt_top
 
