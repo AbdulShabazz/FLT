@@ -485,36 +485,6 @@ variable {ι : Type*}
     [∀ i, MeasurableSpace (G i)]
     [∀ i, BorelSpace (G i)]
 
-open Set Classical in
-noncomputable def structureMap [DecidableEq ι] (S : Finset ι) :
-    ((i : S) → G i) × ((i : {j : ι // j ∉ S}) → C i) → Πʳ i, [G i, C i] := sorry
-  /- fun ⟨f, g⟩ =>
-    ⟨fun i =>
-      if h : i ∈ S then f ⟨i, h⟩ else g ⟨i, by simpa using h⟩,
-      by
-        simp only [Filter.eventually_cofinite, Set.finite_setOf_isMin]
-        use S
-        intros i hi
-        simp only [Set.mem_setOf_eq]
-        rw [dif_neg hi]
-        exact (g ⟨i, hi⟩).prop⟩ -/
-
-lemma continuous_structureMap [DecidableEq ι] (S : Finset ι) :
-    letI : TopologicalSpace (Πʳ i, [G i, C i]) := inferInstance
-    Continuous (structureMap (G := G) (C := C) S) := by sorry
-  /- letI : TopologicalSpace (Πʳ i, [G i, C i]) := inferInstance
-  apply continuous_subtype_mk
-  apply continuous_pi
-  intro i
-  by_cases hi : i ∈ S
-  · simp [structureMap, hi]
-    exact (continuous_apply ⟨i, hi⟩).comp continuous_fst
-  · simp [structureMap, hi]
-    have : Continuous fun p : ((i : S) → G i) × ((i : {j : ι // j ∉ S}) → C i) =>
-        (p.2 ⟨i, hi⟩ : G i) :=
-      continuous_subtype_val.comp ((continuous_apply ⟨i, hi⟩).comp continuous_snd)
-    exact this -/
-
 open ContinuousMulEquiv Classical in
 --@[to_additive]
 lemma mulEquivHaarChar_restrictedProductCongrRight
