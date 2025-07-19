@@ -550,6 +550,35 @@ lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
   (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
   : IsCompact X := by sorry
 
+open Classical in
+noncomputable def X_eq_intersection
+    {ι : Type*} {G : ι → Type*} [Π i, Group (G i)] [Π i, TopologicalSpace (G i)]
+    (C : (i : ι) → Subgroup (G i))
+    (S : Set ι) :
+    {x : Πʳ i, [G i, ↑(C i)] | ∀ i ∉ S, x i ∈ C i} = ⋂ i, ⋂ (_ : i ∉ S), {x | x i ∈ C i} := by
+  ext x
+  simp only [Set.mem_setOf, Set.mem_iInter]
+
+open ContinuousMulEquiv Classical RestrictedProduct in
+--@[to_additive, simp]
+lemma restrictedProduct_subset_isOpen
+    {ι : Type*} {G : ι → Type*} [Π i, Group (G i)]
+    [Π i, TopologicalSpace (G i)] [∀ i, IsTopologicalGroup (G i)]
+    (C : (i : ι) → Subgroup (G i))
+    (hCopen : Fact (∀ i, IsOpen (↑(C i) : Set (G i))))
+    (S : Set ι)
+    (hS_finite : S.Finite) :
+    IsOpen (⋂ i, ⋂ (_ : i ∉ S), {x : Πʳ i, [G i, ↑(C i)] | x i ∈ C i}) := by sorry
+  /- have : IsOpen {x | ∀ i ∉ S, x i ∈ C i} := by rw [X_eq_intersection C S]
+  rw [this]
+  let F := Sᶜ
+  have hF_cofinite : Filter.cofinite ≤ Filter.principal F := by
+    rw [Filter.le_principal_iff, Filter.mem_cofinite, Set.compl_compl]
+    exact hS_finite
+  apply continuous_dom hCopen hF_cofinite
+  intro i _
+  exact hCopen.elim i -/
+
 open ContinuousMulEquiv Classical RestrictedProduct in
 --@[to_additive, simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight
@@ -589,24 +618,20 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       ext x
       simp only [X, Set.mem_iInter, Set.mem_setOf]
     rw [this]
-
     -- For the restricted product, {x | x i ∈ C i} is always open
     -- because it's either the whole space (if i is not in the support)
     -- or it's the preimage of the open set C i under the continuous projection
-
-    sorry -- This needs the specific API for restricted product topology
+    exact restrictedProduct_subset_isOpen C hCopen S hS_finite
   have hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)} := rfl
   have hX_def : X = {x | ∀ i ∉ S, x i ∈ C i} := rfl
 
   have hXcompact : IsCompact X :=
     mulEquivHaarChar_restrictedProductCongrRight_X_compact
       φ hφ S hS_finite hS_def X hX_def U hU_open hU_compact hX_eq
-
   have hXpos : (0 : ℝ≥0∞) < haar X :=
     restrictedProduct_subset_measure_open_pos
       φ S X hX_def hXopen
   have hXfin : haar X < ∞ := hXcompact.measure_lt_top
-
   -- Apply the characterization of mulEquivHaarChar via scaling on open sets
   suffices h : (mulEquivHaarChar (.restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X =
     (∏ᶠ i, mulEquivHaarChar (φ i) : ℝ≥0∞) * haar X by
