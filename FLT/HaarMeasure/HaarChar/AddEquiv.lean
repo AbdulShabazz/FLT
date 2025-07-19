@@ -5,6 +5,7 @@ import FLT.Mathlib.MeasureTheory.Measure.Regular
 import FLT.Mathlib.MeasureTheory.Group.Measure
 import Mathlib.Topology.Compactness.Bases
 import Mathlib.Topology.Compactness.Compact
+import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 
 open MeasureTheory.Measure
 open scoped NNReal
@@ -485,14 +486,12 @@ variable {ι : Type*}
     [∀ i, MeasurableSpace (G i)]
     [∀ i, BorelSpace (G i)]
 
---lemma restrictedProduct_subset_measure_open
-
 omit [∀ (i : ι), BorelSpace (G i)] [∀ i, MeasurableSpace (G i)] in
 --@[to_additive, simp]
 lemma restrictedProduct_subset_measure_open_pos
-  [∀ i, LocallyCompactSpace (G i)]
-  [∀i, CompactSpace (G i)]
-  (φ : Π i, (G i) ≃ₜ* (G i))
+    [∀ i, LocallyCompactSpace (G i)]
+    [∀i, CompactSpace (G i)]
+    (φ : Π i, (G i) ≃ₜ* (G i))
     [∀ i, MeasurableSpace (G i)]
     (S : Set ι := {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)})
     (X : Set (Πʳ i, [G i, C i]))
@@ -551,7 +550,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
   (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
   : IsCompact X := by sorry
 
-open ContinuousMulEquiv Classical in
+open ContinuousMulEquiv Classical RestrictedProduct in
 --@[to_additive, simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight
   [∀ i, LocallyCompactSpace (G i)] [∀i, CompactSpace (G i)]
@@ -575,12 +574,27 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
     rwa [← Filter.eventually_cofinite]
   -- Define the compact open subset X of the restricted product
   let X : Set (Πʳ i, [G i, C i]) := {x | ∀ i ∉ S, x i ∈ C i}
-
-  -- todo: lemma restrictedProduct_subset_measure_open
-  have hXopen : IsOpen X := by sorry
+  -- Define open sets for coordinates in S (all unrestricted)
+  let opens : (i : ι) → i ∈ S → Set (G i) := fun i hi => Set.univ
+  let hU : ∀ i (hi : i ∈ S), IsOpen (opens i hi) := fun i hi => isOpen_univ
 
   obtain ⟨U, hU_open, hU_compact, hX_eq⟩ :=
-    restrictedProduct_subset_eq_prod_subset hCopen hCcompact S hS_finite
+    restrictedProduct_subset_eq_prod_subset
+      hCopen hCcompact S hS_finite
+  -- todo: lemma restrictedProduct_subset_measure_open
+  have hXopen : IsOpen X := by
+    -- We can use that this is a basic open set in the restricted product topology
+    -- First, rewrite X in terms of intersections of preimages
+    have : X = ⋂ i ∉ S, {x : Πʳ i, [G i, C i] | x i ∈ C i} := by
+      ext x
+      simp only [X, Set.mem_iInter, Set.mem_setOf]
+    rw [this]
+
+    -- For the restricted product, {x | x i ∈ C i} is always open
+    -- because it's either the whole space (if i is not in the support)
+    -- or it's the preimage of the open set C i under the continuous projection
+
+    sorry -- This needs the specific API for restricted product topology
   have hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)} := rfl
   have hX_def : X = {x | ∀ i ∉ S, x i ∈ C i} := rfl
 
@@ -589,7 +603,8 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       φ hφ S hS_finite hS_def X hX_def U hU_open hU_compact hX_eq
 
   have hXpos : (0 : ℝ≥0∞) < haar X :=
-    restrictedProduct_subset_measure_open_pos φ S X hX_def hXopen
+    restrictedProduct_subset_measure_open_pos
+      φ S X hX_def hXopen
   have hXfin : haar X < ∞ := hXcompact.measure_lt_top
 
   -- Apply the characterization of mulEquivHaarChar via scaling on open sets
