@@ -516,7 +516,7 @@ lemma continuous_structureMap [DecidableEq ι] (S : Finset ι) :
     exact this -/
 
 open ContinuousMulEquiv Classical in
-@[to_additive]
+--@[to_additive]
 lemma mulEquivHaarChar_restrictedProductCongrRight
 [∀ i, LocallyCompactSpace (G i)] (φ : Π i, (G i) ≃ₜ* (G i))
     (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)) :
@@ -555,44 +555,29 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
   have hXfin : haar X < ∞ := hXcompact.measure_lt_top
 
   -- Apply the characterization of mulEquivHaarChar via scaling on open sets
-  suffices (mulEquivHaarChar (.restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X =
-    (∏ᶠ i, mulEquivHaarChar (φ i) : ℝ≥0∞) * haar X by sorry
-    --exact ENNReal.mul_right_inj (ne_of_gt hXpos) hXfin.ne |>.mp this
+  suffices h : (mulEquivHaarChar (.restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X =
+    (∏ᶠ i, mulEquivHaarChar (φ i) : ℝ≥0∞) * haar X by
+    -- Use h to cancel haar X from both sides
+    have : mulEquivHaarChar (.restrictedProductCongrRight φ hφ) =
+           ∏ᶠ i, mulEquivHaarChar (φ i) := by
+      sorry -- This uses ENNReal.mul_right_inj with hXpos and hXfin
+    -- Convert from ENNReal equality to the actual type
+    sorry -- This converts from ENNReal equality to the original type
 
-    -- Now we need to show haar X = (∏ᶠ i, mulEquivHaarChar (φ i)) * haar X
-  calc (mulEquivHaarChar (restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X =
-        haar ((restrictedProductCongrRight φ hφ) '' X) := by sorry
-        /- rw [← mulEquivHaarChar_map_open haar _ hXopen]
-        simp [RestrictedProduct.smul_apply, nnreal_smul_coe_apply]
-      _ = haar X := by rw [h_preserves_X]
-      _ = 1 * haar X := by rw [one_mul]
-      _ = (∏ᶠ i, (mulEquivHaarChar (φ i) : ℝ≥0∞)) * haar X := by
+  -- Now prove the suffices statement
+  -- First show that the automorphism preserves X
+  have h_preserves_X : (restrictedProductCongrRight φ hφ) '' X = X := by sorry
+
+  -- Now use calc to prove the suffices
+  calc (mulEquivHaarChar (restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X
+      = haar ((restrictedProductCongrRight φ hφ) '' X) := by sorry
+        -- This should use the scaling property of mulEquivHaarChar
+    _ = haar X := by rw [h_preserves_X]
+    _ = 1 * haar X := by rw [one_mul]
+    _ = (∏ᶠ i, (mulEquivHaarChar (φ i) : ℝ≥0∞)) * haar X := by
         congr 1
-        rw [← finprod_eq_prod_of_mulSupport_subset S hS_finite]
-        · simp only [finprod_eq_prod_of_finite_mulSupport]
-          congr 1
-          ext i
-          simp only [Set.mem_toFinset, mulSupport_subset_iff, ne_eq, one_ne_zero,
-                    not_false_eq_true, forall_true_left, Set.mem_setOf]
-          by_cases hi : i ∈ S
-          · simp [hi]
-          · -- For i ∉ S, φ i preserves C i, so its Haar character is 1
-            have hφ_preserves : Set.BijOn (φ i) (C i) (C i) := by
-              contrapose! hi
-              exact hi
-            -- Use that C i is compact open
-            have h_compact : IsCompact (C i : Set (G i)) :=
-              IsOpen.isCompact_of_subsingleton (hCopen.out i).isOpenMap
-            -- The Haar character is 1 on compact spaces
-            have : mulEquivHaarChar (φ i) = 1 := by
-              apply mulEquivHaarChar_eq_one_of_preserves_compactOpen
-              · exact hCopen.out i
-              · exact h_compact
-              · exact hφ_preserves
-            simp [this, hi]
-        · intro i hi
-          simp only [ne_eq, ENNReal.coe_ne_zero]
-          exact mulEquivHaarChar_ne_zero _ -/
+        -- Show the product equals 1
+        sorry -- This is where we show ∏ᶠ i, mulEquivHaarChar (φ i) = 1
   -- FLT#552
 
 end restrictedproduct
