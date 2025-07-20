@@ -473,10 +473,6 @@ lemma _root_.WeaklyLocallyCompactSpace.of_isTopologicalGroup_of_isOpen_compactSp
       hCopen.out |>.smul _ |>.mem_nhds <| by
       simpa using Set.smul_mem_smul_set (a := x) (one_mem C)⟩
 
---import Mathlib.Topology.QuasiSeparated
-lemma isCompact_inter {ι : Type*} {α β : Type*} [TopologicalSpace α]
-[TopologicalSpace β] {f : α → β}{b : ι → Set α} : ∀ i j, IsCompact (b i ∩ b j) := sorry
-
 variable {ι : Type*}
     {G : ι → Type*}
     [Π i, Group (G i)] [Π i, TopologicalSpace (G i)] [∀ i, IsTopologicalGroup (G i)]
@@ -568,16 +564,9 @@ lemma restrictedProduct_subset_isOpen
     (hCopen : Fact (∀ i, IsOpen (↑(C i) : Set (G i))))
     (S : Set ι)
     (hS_finite : S.Finite) :
-    IsOpen (⋂ i, ⋂ (_ : i ∉ S), {x : Πʳ i, [G i, ↑(C i)] | x i ∈ C i}) := by sorry
-  /- have : IsOpen {x | ∀ i ∉ S, x i ∈ C i} := by rw [X_eq_intersection C S]
-  rw [this]
-  let F := Sᶜ
-  have hF_cofinite : Filter.cofinite ≤ Filter.principal F := by
-    rw [Filter.le_principal_iff, Filter.mem_cofinite, Set.compl_compl]
-    exact hS_finite
-  apply continuous_dom hCopen hF_cofinite
-  intro i _
-  exact hCopen.elim i -/
+    IsOpen (⋂ i, ⋂ (_ : i ∉ S), {x : Πʳ i, [G i, ↑(C i)] | x i ∈ C i}) := by
+  rw [← X_eq_intersection C S]
+  sorry
 
 open ContinuousMulEquiv Classical RestrictedProduct in
 --@[to_additive, simp]
