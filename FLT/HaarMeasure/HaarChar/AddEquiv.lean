@@ -575,6 +575,30 @@ lemma restrictedProduct_subset_isOpen
   sorry -- Q.E.D.
 
 open ContinuousMulEquiv Classical RestrictedProduct in
+@[simp]
+lemma restrictedProduct_subset_measure_open
+    {ι : Type*} {G : ι → Type*} [Π i, Group (G i)]
+    [∀ i, TopologicalSpace (G i)] [∀ i, CompactSpace (G i)]
+    [Π i, TopologicalSpace (G i)] [∀ i, IsTopologicalGroup (G i)]
+    (C : (i : ι) → Subgroup (G i))
+    (S : Set ι)
+    (X : Set Πʳ (i : ι), [G i, ↑(C i)])
+    (hXdef : X = {x | ∀ i ∉ S, x i ∈ C i})
+    (hCopen : Fact (∀ i, IsOpen (↑(C i) : Set (G i))))
+    (hS_finite : S.Finite) : IsOpen X := by
+  -- We can use that this is a basic open set in the restricted product topology
+  -- First, rewrite X in terms of intersections of preimages
+  rw [hXdef]
+  have : {x | ∀ i ∉ S, x i ∈ C i} = ⋂ i ∉ S, {x : Πʳ i, [G i, C i] | x i ∈ C i} := by
+    ext x
+    simp only [Set.mem_iInter, Set.mem_setOf]
+  rw [this]
+  -- For the restricted product, {x | x i ∈ C i} is always open
+  -- because it's either the whole space (if i is not in the support)
+  -- or it's the preimage of the open set C i under the continuous projection
+  exact restrictedProduct_subset_isOpen C hCopen S hS_finite
+
+open ContinuousMulEquiv Classical RestrictedProduct in
 --@[to_additive, simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight
   [∀ i, LocallyCompactSpace (G i)] [∀i, CompactSpace (G i)]
@@ -596,27 +620,17 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
   let S : Set ι := {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)}
   have hS_finite : S.Finite := by
     rwa [← Filter.eventually_cofinite]
-  -- Define the compact open subset X of the restricted product
-  let X : Set (Πʳ i, [G i, C i]) := {x | ∀ i ∉ S, x i ∈ C i}
   -- Define open sets for coordinates in S (all unrestricted)
   let opens : (i : ι) → i ∈ S → Set (G i) := fun i hi => Set.univ
   let hU : ∀ i (hi : i ∈ S), IsOpen (opens i hi) := fun i hi => isOpen_univ
-
   obtain ⟨U, hU_open, hU_compact, hX_eq⟩ :=
     restrictedProduct_subset_eq_prod_subset
       hCopen hCcompact S hS_finite
-  -- todo: lemma restrictedProduct_subset_measure_open
-  have hXopen : IsOpen X := by
-    -- We can use that this is a basic open set in the restricted product topology
-    -- First, rewrite X in terms of intersections of preimages
-    have : X = ⋂ i ∉ S, {x : Πʳ i, [G i, C i] | x i ∈ C i} := by
-      ext x
-      simp only [X, Set.mem_iInter, Set.mem_setOf]
-    rw [this]
-    -- For the restricted product, {x | x i ∈ C i} is always open
-    -- because it's either the whole space (if i is not in the support)
-    -- or it's the preimage of the open set C i under the continuous projection
-    exact restrictedProduct_subset_isOpen C hCopen S hS_finite
+  -- Define the compact open subset X of the restricted product
+  let X : Set (Πʳ i, [G i, C i]) := {x | ∀ i ∉ S, x i ∈ C i}
+  have hXopen : IsOpen X :=
+    restrictedProduct_subset_measure_open
+      C S X (by rfl) hCopen hS_finite
   have hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)} := rfl
   have hX_def : X = {x | ∀ i ∉ S, x i ∈ C i} := rfl
 
