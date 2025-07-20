@@ -555,7 +555,6 @@ noncomputable def X_eq_intersection
   ext x
   simp only [Set.mem_setOf, Set.mem_iInter]
 
-open ContinuousMulEquiv Classical RestrictedProduct in
 @[simp]
 lemma restrictedProduct_subset_isOpen
     {ι : Type*} {G : ι → Type*} [Π i, Group (G i)]
@@ -574,7 +573,6 @@ lemma restrictedProduct_subset_isOpen
   -- This is a finite intersection of open sets (since S is finite, Sᶜ is cofinite)
   sorry -- Q.E.D.
 
-open ContinuousMulEquiv Classical RestrictedProduct in
 @[simp]
 lemma restrictedProduct_subset_measure_open
     {ι : Type*} {G : ι → Type*} [Π i, Group (G i)]
@@ -633,7 +631,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       C S X (by rfl) hCopen hS_finite
   have hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)} := rfl
   have hX_def : X = {x | ∀ i ∉ S, x i ∈ C i} := rfl
-
+  --todo: mulEquivHaarChar_restrictedProductCongrRight_X_compact
   have hXcompact : IsCompact X :=
     mulEquivHaarChar_restrictedProductCongrRight_X_compact
       φ hφ S hS_finite hS_def X hX_def U hU_open hU_compact hX_eq
@@ -650,11 +648,9 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       sorry -- This uses ENNReal.mul_right_inj with hXpos and hXfin
     -- Convert from ENNReal equality to the actual type
     sorry -- This converts from ENNReal equality to the original type
-
   -- Now prove the suffices statement
   -- First show that the automorphism preserves X
   have h_preserves_X : (restrictedProductCongrRight φ hφ) '' X = X := by sorry
-
   -- Now use calc to prove the suffices
   calc (mulEquivHaarChar (restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X
       = haar ((restrictedProductCongrRight φ hφ) '' X) := by
@@ -689,12 +685,10 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
           -- Now show mulEquivHaarChar = 1 when φ preserves a compact subgroup
           have : mulEquivHaarChar (φ i) = 1 := by sorry -- Key lemma needed!
           simp [this] -/
-
         -- Now we need to relate the finite product to the action on X
         have h_factor : ∏ i ∈ hS_finite.toFinset, (mulEquivHaarChar (φ i) : ℝ≥0∞) = 1 := by
           -- This should follow from how restrictedProductCongrRight acts on X
           sorry
-
         rw [h_prod_split, h_factor]
   -- FLT#552
 
