@@ -7,6 +7,11 @@ import Mathlib.Topology.Compactness.Bases
 import Mathlib.Topology.Compactness.Compact
 import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 
+import Mathlib.Algebra.BigOperators.Finprod
+
+import Mathlib.Data.ENNReal.Basic
+--import Mathlib.Topology.Algebra.InfiniteProd
+
 open MeasureTheory.Measure
 open scoped NNReal
 
@@ -573,6 +578,41 @@ lemma restrictedProduct_subset_isOpen
   -- This is a finite intersection of open sets (since S is finite, Sᶜ is cofinite)
   sorry -- Q.E.D.
 
+-- todo >> Mathlib.Data.ENNReal.BigOperators
+lemma ENNReal.coe_finprod_of_finite
+    {ι : Type*} [Fintype ι]
+    (f : ι → ℝ≥0) :
+    ∏ᶠ i, (f i : ℝ≥0∞) = ↑(∏ᶠ i, f i) := by
+  simp [finprod_eq_prod_of_fintype]
+
+-- The definition of a finitary product over
+-- a commutative monoid with a complete lattice structure.
+-- todo >> Mathlib.Algebra.BigOperators.Finprod
+def finprod_def'
+  {ι : Type*} {M : Type*} [CommMonoid M] [CompleteLattice M]
+  (f : ι → M) : M :=
+  ⨆ s : Finset ι, ∏ i ∈ s, f i
+
+-- todo >> Mathlib.Data.ENNReal.BigOperators
+@[simp]
+lemma ENNReal.coe_finprod
+    {ι : Type*} {f : ι → ℝ≥0}
+    [Decidable (Function.mulSupport f).Finite] :
+    ↑(∏ᶠ i, f i) = ∏ᶠ i, (f i : ℝ≥0∞) := by
+  -- Define the coercion as a monoid homomorphism
+  let g : ℝ≥0 →* ℝ≥0∞ := {
+    toFun := fun x => ↑x
+    map_one' := by simp
+    map_mul' := fun x y => by simp
+  }
+  -- Apply the theorem
+  convert MonoidHom.map_finprod_of_injective g _ f
+  -- Prove injectivity
+  · intros x y h
+    rw [MonoidHom.coe_mk] at h
+    -- Now h : ↑x = ↑y
+    exact coe_injective h
+
 @[simp]
 lemma restrictedProduct_subset_measure_open
     {ι : Type*} {G : ι → Type*} [Π i, Group (G i)]
@@ -642,12 +682,13 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
   -- Apply the characterization of mulEquivHaarChar via scaling on open sets
   suffices h : (mulEquivHaarChar (.restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X =
     (∏ᶠ i, mulEquivHaarChar (φ i) : ℝ≥0∞) * haar X by
-    -- Use h to cancel haar X from both sides
-    have : mulEquivHaarChar (.restrictedProductCongrRight φ hφ) =
-           ∏ᶠ i, mulEquivHaarChar (φ i) := by
-      sorry -- This uses ENNReal.mul_right_inj with hXpos and hXfin
-    -- Convert from ENNReal equality to the actual type
-    sorry -- This converts from ENNReal equality to the original type
+      -- We have μ(X) ≠ 0 and μ(X) ≠ ∞, so we can cancel it from both sides.
+      have ne_zero : haar X ≠ 0 := hXpos.ne'
+      have ne_top : haar X ≠ ∞ := hXfin.ne
+      rw [mul_comm, mul_comm (∏ᶠ i, (mulEquivHaarChar (φ i) : ℝ≥0∞)) _] at h
+      have h' := (ENNReal.mul_right_inj ne_zero ne_top).mp h
+      rw [← ENNReal.coe_finprod] at h'
+      exact ENNReal.coe_inj.mp h'
   -- Now prove the suffices statement
   -- First show that the automorphism preserves X
   have h_preserves_X : (restrictedProductCongrRight φ hφ) '' X = X := by sorry
