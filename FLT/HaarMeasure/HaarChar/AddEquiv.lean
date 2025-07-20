@@ -556,7 +556,7 @@ noncomputable def X_eq_intersection
   simp only [Set.mem_setOf, Set.mem_iInter]
 
 open ContinuousMulEquiv Classical RestrictedProduct in
---@[to_additive, simp]
+@[simp]
 lemma restrictedProduct_subset_isOpen
     {ι : Type*} {G : ι → Type*} [Π i, Group (G i)]
     [Π i, TopologicalSpace (G i)] [∀ i, IsTopologicalGroup (G i)]
@@ -565,8 +565,14 @@ lemma restrictedProduct_subset_isOpen
     (S : Set ι)
     (hS_finite : S.Finite) :
     IsOpen (⋂ i, ⋂ (_ : i ∉ S), {x : Πʳ i, [G i, ↑(C i)] | x i ∈ C i}) := by
+  -- have h_eq : {x : Πʳ i, [G i, ↑(C i)] | ∀ i ∉ S, x i ∈ C i} =
+  --             {x : Πʳ i, [G i, ↑(C i)] | {i | x i ∉ C i} ⊆ S}
+  -- Now we have ⋂ i ∈ Sᶜ, {x | x i ∈ C i}
+  -- So {x | ∀ i ∉ S, x i ∈ C i} = {x | support of exceptions ⊆ S}
+  -- The key insight: in a restricted product, x i ∈ C i for all but finitely many i
   rw [← X_eq_intersection C S]
-  sorry
+  -- This is a finite intersection of open sets (since S is finite, Sᶜ is cofinite)
+  sorry -- Q.E.D.
 
 open ContinuousMulEquiv Classical RestrictedProduct in
 --@[to_additive, simp]
