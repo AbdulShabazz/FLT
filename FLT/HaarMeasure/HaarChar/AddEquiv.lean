@@ -534,8 +534,6 @@ lemma restrictedProduct_subset_eq_prod_subset
   --haveI : Fintype S := fintype
   exact isCompact_univ
 
-variable [∀ i, CompactSpace (G i)]
-
 /-- Projection from restricted product subset to product over S and complement -/
 def restrictedProductToSplitProduct
     (S : Set ι)
@@ -641,7 +639,6 @@ def splitProductToRestrictedProduct
 omit
   [∀ (i : ι), IsTopologicalGroup (G i)]
   [∀ (i : ι), BorelSpace (G i)]
-  [∀ (i : ι), CompactSpace (G i)]
   [(i : ι) → TopologicalSpace (G i)]
   [(i : ι) → MeasurableSpace (G i)] in
 @[simp]
@@ -664,7 +661,6 @@ lemma splitProductToRestrictedProduct_comp_restrictedProductToSplitProduct
 omit
   [∀ (i : ι), IsTopologicalGroup (G i)]
   [∀ (i : ι), BorelSpace (G i)]
-  [∀ (i : ι), CompactSpace (G i)]
   [(i : ι) → TopologicalSpace (G i)]
   [(i : ι) → MeasurableSpace (G i)] in
 @[simp]
