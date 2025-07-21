@@ -534,24 +534,17 @@ lemma restrictedProduct_subset_eq_prod_subset
   --haveI : Fintype S := fintype
   exact isCompact_univ
 
-open ContinuousMulEquiv Classical in
-@[to_additive, simp]
-lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
-    [∀ i, CompactSpace (G i)]
-    (φ : Π i, (G i) ≃ₜ* (G i))
-    (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+variable [∀ i, CompactSpace (G i)]
+
+/-- Projection from restricted product subset to product over S and complement -/
+def restrictedProductToSplitProduct
     (S : Set ι)
-    (hS_finite : S.Finite)
-    (hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)})
-    (X : Set (Πʳ i, [G i, C i]))
-    (hX_def : X = {x | ∀ i ∉ S, x i ∈ C i})
+    (C : (i : ι) → Subgroup (G i))
     (U : Set (Π i : S, G i))
-    (hU_open : IsOpen U)
-    (hU_compact : IsCompact U)
+    (X : Set (Πʳ i, [G i, C i]))
     (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
-    : IsCompact X := by
-  -- Define the homeomorphism between X and U × ∏ i ∉ S, C i
-  let f : X → U × Π i : {i | i ∉ S}, C i := fun x =>
+    : X → U × Π i : {i | i ∉ S}, C i :=
+  fun x =>
     (⟨fun i : S => x.val i.val, by
       have : x.val ∈ {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i} := by
         rw [← hX_eq]; exact x.property
@@ -561,7 +554,17 @@ lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
         rw [← hX_eq]; exact x.property
       exact this.2 i.val i.property⟩)
 
-  let g : ↥U × (Π i : {i | i ∉ S}, ↥(C i)) → ↥X := fun ⟨u, c⟩ =>
+/-- Inverse map from split product to restricted product subset -/
+def splitProductToRestrictedProduct
+    (S : Set ι)
+    [DecidablePred (· ∈ S)]
+    (hS_finite : S.Finite)
+    (C : (i : ι) → Subgroup (G i))
+    (U : Set (Π i : S, G i))
+    (X : Set (Πʳ i, [G i, C i]))
+    (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
+    : U × (Π i : {i | i ∉ S}, C i) → X :=
+  fun ⟨u, c⟩ =>
     let x_val : Π i, G i := fun i =>
       if h : i ∈ S then
         u.val ⟨i, h⟩
@@ -635,28 +638,89 @@ lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
       }
     ⟩
 
-  -- Show f and g are inverses
-  have hfg : ∀ x, g (f x) = x := by
-    intro x
-    ext i
-    by_cases h : i ∈ S
-    · simp [f, g]
-    · simp [f, g]
+omit
+  [∀ (i : ι), IsTopologicalGroup (G i)]
+  [∀ (i : ι), BorelSpace (G i)]
+  [∀ (i : ι), CompactSpace (G i)]
+  [(i : ι) → TopologicalSpace (G i)]
+  [(i : ι) → MeasurableSpace (G i)] in
+@[simp]
+lemma splitProductToRestrictedProduct_comp_restrictedProductToSplitProduct
+    (S : Set ι)
+    [DecidablePred (· ∈ S)]
+    (hS_finite : S.Finite)
+    (C : (i : ι) → Subgroup (G i))
+    (U : Set (Π i : S, G i))
+    (X : Set (Πʳ i, [G i, C i]))
+    (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
+    : ∀ x, splitProductToRestrictedProduct S hS_finite C U X hX_eq
+        (restrictedProductToSplitProduct S C U X hX_eq x) = x := by
+  intro x
+  ext i
+  by_cases h : i ∈ S
+  · simp [restrictedProductToSplitProduct, splitProductToRestrictedProduct]
+  · simp [restrictedProductToSplitProduct, splitProductToRestrictedProduct]
 
-  have hgf : ∀ y, f (g y) = y := by
-    intro ⟨u, c⟩
-    apply Prod.ext
-    · -- First component
-      ext i
-      simp only [f, g]
-      change (if h : i.val ∈ S then u.val ⟨i.val, h⟩ else (c ⟨i.val, h⟩).val) = u.val i
-      simp only [dif_pos i.property]
-    · -- Second component
-      funext i
-      apply Subtype.ext
-      simp only [f, g]
-      change (if h : i.val ∈ S then u.val ⟨i.val, h⟩ else (c ⟨i.val, h⟩).val) = (c i).val
-      simp only [dif_neg i.property]
+omit
+  [∀ (i : ι), IsTopologicalGroup (G i)]
+  [∀ (i : ι), BorelSpace (G i)]
+  [∀ (i : ι), CompactSpace (G i)]
+  [(i : ι) → TopologicalSpace (G i)]
+  [(i : ι) → MeasurableSpace (G i)] in
+@[simp]
+lemma restrictedProductToSplitProduct_comp_splitProductToRestrictedProduct
+    (S : Set ι)
+    [DecidablePred (· ∈ S)]
+    (hS_finite : S.Finite)
+    (C : (i : ι) → Subgroup (G i))
+    (U : Set (Π i : S, G i))
+    (X : Set (Πʳ i, [G i, C i]))
+    (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
+    : ∀ y, restrictedProductToSplitProduct S C U X hX_eq
+        (splitProductToRestrictedProduct S hS_finite C U X hX_eq y) = y := by
+  intro ⟨u, c⟩
+  apply Prod.ext
+  · ext i
+    simp only [restrictedProductToSplitProduct, splitProductToRestrictedProduct]
+    change (if h : i.val ∈ S then u.val ⟨i.val, h⟩ else (c ⟨i.val, h⟩).val) = u.val i
+    simp only [dif_pos i.property]
+  · funext i
+    apply Subtype.ext
+    simp only [restrictedProductToSplitProduct, splitProductToRestrictedProduct]
+    change (if h : i.val ∈ S then u.val ⟨i.val, h⟩ else (c ⟨i.val, h⟩).val) = (c i).val
+    simp only [dif_neg i.property]
+
+open ContinuousMulEquiv Classical in
+--@[to_additive, simp]
+lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
+    [∀ i, CompactSpace (G i)]
+    (φ : Π i, (G i) ≃ₜ* (G i))
+    (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+    (S : Set ι)
+    (hS_finite : S.Finite)
+    (hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)})
+    (X : Set (Πʳ i, [G i, C i]))
+    (hX_def : X = {x | ∀ i ∉ S, x i ∈ C i})
+    (U : Set (Π i : S, G i))
+    (hU_open : IsOpen U)
+    (hU_compact : IsCompact U)
+    (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
+    : IsCompact X := by
+  -- Define the homeomorphism between X and U × ∏ i ∉ S, C i
+  let f : X → U × Π i : {i | i ∉ S}, C i :=
+    restrictedProductToSplitProduct S C U X hX_eq
+
+  let g : ↥U × (Π i : {i | i ∉ S}, ↥(C i)) → ↥X :=
+    splitProductToRestrictedProduct S hS_finite C U X hX_eq
+
+  -- Show f and g are inverses
+  have hfg : ∀ x, g (f x) = x :=
+    splitProductToRestrictedProduct_comp_restrictedProductToSplitProduct
+      S hS_finite C U X hX_eq
+
+  have hgf : ∀ y, f (g y) = y :=
+    restrictedProductToSplitProduct_comp_splitProductToRestrictedProduct
+      S hS_finite C U X hX_eq
 
   -- f is a continuous bijection from X to a compact space
   have : CompactSpace (↥U × Π i : {i | i ∉ S}, ↥(C i)) := by
