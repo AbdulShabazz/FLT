@@ -537,19 +537,140 @@ lemma restrictedProduct_subset_eq_prod_subset
 open ContinuousMulEquiv Classical in
 @[to_additive, simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
-  [∀ i, CompactSpace (G i)]
-  (φ : Π i, (G i) ≃ₜ* (G i))
-  (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
-  (S : Set ι)
-  (hS_finite : S.Finite)
-  (hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)})
-  (X : Set (Πʳ i, [G i, C i]) )
-  (hX_def : X = {x | ∀ i ∉ S, x i ∈ C i})
-  (U : Set (Π i : S, G i))
-  (hU_open : IsOpen U)
-  (hU_compact : IsCompact U)
-  (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
-  : IsCompact X := by sorry
+    [∀ i, CompactSpace (G i)]
+    (φ : Π i, (G i) ≃ₜ* (G i))
+    (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+    (S : Set ι)
+    (hS_finite : S.Finite)
+    (hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)})
+    (X : Set (Πʳ i, [G i, C i]))
+    (hX_def : X = {x | ∀ i ∉ S, x i ∈ C i})
+    (U : Set (Π i : S, G i))
+    (hU_open : IsOpen U)
+    (hU_compact : IsCompact U)
+    (hX_eq : X = {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
+    : IsCompact X := by
+  -- Define the homeomorphism between X and U × ∏ i ∉ S, C i
+  let f : X → U × Π i : {i | i ∉ S}, C i := fun x =>
+    (⟨fun i : S => x.val i.val, by
+      have : x.val ∈ {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i} := by
+        rw [← hX_eq]; exact x.property
+      exact this.1⟩,
+    fun i : {i | i ∉ S} => ⟨x.val i.val, by
+      have : x.val ∈ {x : Πʳ i, [G i, C i] | (fun i : S => x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i} := by
+        rw [← hX_eq]; exact x.property
+      exact this.2 i.val i.property⟩)
+
+  let g : ↥U × (Π i : {i | i ∉ S}, ↥(C i)) → ↥X := fun ⟨u, c⟩ =>
+    let x_val : Π i, G i := fun i =>
+      if h : i ∈ S then
+        u.val ⟨i, h⟩
+      else
+        (c ⟨i, h⟩).val
+    ⟨⟨x_val,
+      by {
+        apply Set.Finite.subset hS_finite
+        intro i hi_notin_C
+        by_cases h_in_S : i ∈ S
+        · -- If `i` is in `S`, the goal is met.
+          exact h_in_S
+        · -- Now, assume `i ∉ S` and derive a contradiction.
+          exfalso
+          have h_is_in_C : x_val i ∈ C i := by
+            simp only [x_val, dif_neg h_in_S]
+            exact (c ⟨i, h_in_S⟩).property
+          exact hi_notin_C h_is_in_C
+      }
+    ⟩, by {
+        rw [hX_eq]
+        refine ⟨?_, ?_⟩ -- We will prove the two conditions for membership in `X`
+        · -- First, prove `(fun i : S => x_val i.val) ∈ U`.
+          -- We know `u.val ∈ U` from `u.property`.
+          -- We'll prove our function equals `u.val` and then rewrite.
+          have h_fn_eq : (fun i : S => x_val i.val) = u.val := by {
+            -- To prove two functions are equal, prove they are equal for any input `i`.
+            funext i
+            -- Unfold `x_val` and simplify using that `i.val ∈ S`.
+            simp only [x_val, dif_pos i.property]
+          }
+          -- Rewrite with our proven equality and use the property of `u` to finish.
+          have h_u_prop : u.val ∈ U := u.property
+          rwa [← h_fn_eq] at h_u_prop
+        · -- Second, prove `∀ i ∉ S, x_val i ∈ C i`.
+          intro i hi
+
+          -- We want to prove that the projection of our constructed element equals `x_val i`.
+          -- First, we construct the element of the restricted product explicitly.
+          let restricted_product_element : Πʳ i, [G i, C i] :=
+            ⟨x_val, by {
+                -- This is the proof that `x_val` satisfies the restricted product condition.
+                apply Set.Finite.subset hS_finite
+                intro j hj_notin_C
+                by_cases h_in_S : j ∈ S
+                · exact h_in_S
+                · exfalso
+                  have h_is_in_C : x_val j ∈ C j := by
+                  {
+                    dsimp [x_val]
+                    rw [dif_neg h_in_S]
+                    exact (c ⟨j, h_in_S⟩).property
+                  }
+                  exact hj_notin_C h_is_in_C
+              }
+            ⟩
+
+          -- Now, state the property about the projection.
+          -- This is true by definition (`rfl`).
+          have h_proj_eq : restricted_product_element i = x_val i := rfl
+
+          -- Rewrite the goal using this definitional equality.
+          rw [h_proj_eq]
+
+          -- The goal is now `x_val i ∈ C i`.
+          -- Unfold `x_val` and use the hypothesis that `i ∉ S`.
+          simp only [x_val, dif_neg hi]
+
+          -- The final goal matches the property of the subtype element `c`.
+          exact (c ⟨i, hi⟩).property
+      }
+    ⟩
+
+  -- Show f and g are inverses
+  have hfg : ∀ x, g (f x) = x := by
+    intro x
+    ext i
+    by_cases h : i ∈ S
+    · simp [f, g]
+    · simp [f, g]
+
+  have hgf : ∀ y, f (g y) = y := by
+    intro ⟨u, c⟩
+    apply Prod.ext
+    · -- First component
+      ext i
+      simp only [f, g]
+      change (if h : i.val ∈ S then u.val ⟨i.val, h⟩ else (c ⟨i.val, h⟩).val) = u.val i
+      simp only [dif_pos i.property]
+    · -- Second component
+      funext i
+      apply Subtype.ext
+      simp only [f, g]
+      change (if h : i.val ∈ S then u.val ⟨i.val, h⟩ else (c ⟨i.val, h⟩).val) = (c i).val
+      simp only [dif_neg i.property]
+
+  -- f is a continuous bijection from X to a compact space
+  have : IsCompact (Set.univ : Set (U × Π i : {i | i ∉ S}, C i)) := by
+    --apply IsCompact.prod hU_compact
+    -- Each C i is a closed subset of the compact space G i, hence compact
+    --apply isCompact_pi_infinite
+    intro i
+    -- C i is closed in G i (this typically holds in restricted product settings)
+    sorry -- Need assumption that C i is closed
+
+  -- Since f is a continuous bijection from X to a compact space,
+  -- and X is Hausdorff (as a subspace of a Hausdorff space),
+  -- f is a homeomorphism and X is compact
+  sorry -- Complete using that continuous bijection from compact to Hausdorff is homeomorphism
 
 open Classical in
 noncomputable def X_eq_intersection
