@@ -659,17 +659,20 @@ lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
       simp only [dif_neg i.property]
 
   -- f is a continuous bijection from X to a compact space
-  have : IsCompact (Set.univ : Set (U × Π i : {i | i ∉ S}, C i)) := by
-    --apply IsCompact.prod hU_compact
-    -- Each C i is a closed subset of the compact space G i, hence compact
-    --apply isCompact_pi_infinite
-    intro i
-    -- C i is closed in G i (this typically holds in restricted product settings)
-    sorry -- Need assumption that C i is closed
+  have : CompactSpace (↥U × Π i : {i | i ∉ S}, ↥(C i)) := by
+    -- First component: U is compact
+    haveI : CompactSpace ↥U := isCompact_iff_compactSpace.mp hU_compact
+    -- Second component: product of compact spaces
+    haveI : ∀ i : {i | i ∉ S}, CompactSpace ↥(C i.val) := fun i => inferInstance
+    -- Now the product instance applies automatically
+    exact inferInstance -- Uses hCcompact!
+
+  -- Then use `CompactSpace.isCompact_univ` to get the `IsCompact` statement when needed.
 
   -- Since f is a continuous bijection from X to a compact space,
   -- and X is Hausdorff (as a subspace of a Hausdorff space),
   -- f is a homeomorphism and X is compact
+  
   sorry -- Complete using that continuous bijection from compact to Hausdorff is homeomorphism
 
 open Classical in
