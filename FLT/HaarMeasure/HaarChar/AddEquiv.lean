@@ -686,6 +686,17 @@ lemma restrictedProductToSplitProduct_comp_splitProductToRestrictedProduct
     change (if h : i.val ∈ S then u.val ⟨i.val, h⟩ else (c ⟨i.val, h⟩).val) = (c i).val
     simp only [dif_neg i.property]
 
+-- todo >> Mathlib.Topology.Algebra.RestrictedProduct
+@[simp]
+lemma RestrictedProduct.continuous_iff.{u, v, w}
+    {ι : Type u} {X : Type v} {G : ι → Type w}
+    [TopologicalSpace X] [∀ i, TopologicalSpace (G i)]
+    (C : (i : ι) → Set (G i))
+    (𝓕 : Filter ι)
+    {f : X → RestrictedProduct G C 𝓕}
+    : Continuous f ↔ ∀ i, Continuous (fun x ↦ f x i) := by
+  sorry
+
 open ContinuousMulEquiv Classical in
 --@[to_additive, simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
@@ -710,7 +721,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
     splitProductToRestrictedProduct S hS_finite C U X hX_eq
 
   -- Show f and g are inverses
-  
+
   have hfg : ∀ x, g (f x) = x :=
     splitProductToRestrictedProduct_comp_restrictedProductToSplitProduct
       S hS_finite C U X hX_eq
