@@ -734,7 +734,8 @@ lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
   have hg_cont : Continuous (Subtype.val ∘ g) := by
     -- We state that it is sufficient to prove that each component function is continuous.
     suffices h_all_components_continuous :
-      ∀ (i : ι), Continuous (fun x ↦ (Subtype.val ∘ g) x i) by sorry
+      ∀ (i : ι), Continuous (fun x ↦ (Subtype.val ∘ g) x i) by
+        rwa [RestrictedProduct.continuous_iff]
     intro i
     dsimp [g, Function.comp]
     by_cases h_in_S : i ∈ S
