@@ -697,6 +697,46 @@ lemma RestrictedProduct.continuous_iff.{u, v, w}
     : Continuous f ↔ ∀ i, Continuous (fun x ↦ f x i) := by
   sorry
 
+lemma continuous_splitProductToRestrictedProduct_components
+    {ι : Type*} {G : ι → Type*}
+    -- Typeclasses
+    [∀ i, Group (G i)] [∀ i, TopologicalSpace (G i)] [∀ i, IsTopologicalGroup (G i)]
+    -- Main arguments
+    (C : (i : ι) → Subgroup (G i))
+    (S : Set ι)
+    (hS_finite : S.Finite)
+    (U : Set ((i : ↑S) → G ↑i))
+    (X : Set Πʳ (i : ι), [G i, ↑(C i)])
+    (g : ↑U × ((i : ↑{i | i ∉ S}) → ↥(C ↑i)) → ↑X)
+    [DecidablePred fun x ↦ x ∈ S]
+    (hX_eq : X = {x | (fun i : S ↦ x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
+    -- The proposition the lemma proves
+    : ∀ (i : ι), Continuous (fun x ↦
+      (splitProductToRestrictedProduct S hS_finite C U X hX_eq x).val i) := by
+  intro i
+  dsimp [splitProductToRestrictedProduct]
+  by_cases h_in_S : i ∈ S
+  · -- Case 1: `i ∈ S`
+    -- We first prove that our function simplifies to a composition of projections.
+    have h_fn_eq : (fun x ↦ (splitProductToRestrictedProduct S hS_finite C U X hX_eq x).val i) =
+      (fun x ↦ x.1.val ⟨i, h_in_S⟩) := by
+        simp [splitProductToRestrictedProduct, h_in_S]
+    have h_cont_simple :
+      Continuous (fun (x : ↥U × (Π (i : {i | i ∉ S}), ↥(C i))) ↦ x.1.val ⟨i, h_in_S⟩) := by
+        sorry
+    -- Now rewrite the goal using this equality.
+    rwa [← h_fn_eq] at h_cont_simple
+  · -- Case 2: `i ∉ S`
+    -- We first prove that our function simplifies to a composition of projections.
+    have h_fn_eq : (fun x ↦ (splitProductToRestrictedProduct S hS_finite C U X hX_eq x).val i) =
+                      (fun x ↦ (x.2 ⟨i, h_in_S⟩).val) := by
+        simp [splitProductToRestrictedProduct, h_in_S]
+    have h_cont_simple :
+      Continuous (fun (x : ↥U × (Π (i : {i | i ∉ S}), ↥(C i))) ↦ (x.2 ⟨i, h_in_S⟩).val) := by
+        sorry
+    -- Now rewrite the goal using this equality.
+    rwa [← h_fn_eq] at h_cont_simple
+
 open ContinuousMulEquiv Classical in
 --@[to_additive, simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
@@ -733,32 +773,8 @@ lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
   -- show (Subtype.val ∘ g) is continuous
   have hg_cont : Continuous (Subtype.val ∘ g) := by
     -- We state that it is sufficient to prove that each component function is continuous.
-    suffices h_all_components_continuous :
-      ∀ (i : ι), Continuous (fun x ↦ (Subtype.val ∘ g) x i) by
-        rwa [RestrictedProduct.continuous_iff]
-    intro i
-    dsimp [g, Function.comp]
-    by_cases h_in_S : i ∈ S
-    · -- Case 1: `i ∈ S`
-      -- We first prove that our function simplifies to a composition of projections.
-      have h_fn_eq : (fun x ↦ (splitProductToRestrictedProduct S hS_finite C U X hX_eq x).val i) =
-        (fun x ↦ x.1.val ⟨i, h_in_S⟩) := by
-          simp [splitProductToRestrictedProduct, h_in_S]
-      have h_cont_simple :
-        Continuous (fun (x : ↥U × (Π (i : {i | i ∉ S}), ↥(C i))) ↦ x.1.val ⟨i, h_in_S⟩) := by
-          sorry
-      -- Now rewrite the goal using this equality.
-      rwa [← h_fn_eq] at h_cont_simple
-    · -- Case 2: `i ∉ S`
-      -- We first prove that our function simplifies to a composition of projections.
-      have h_fn_eq : (fun x ↦ (splitProductToRestrictedProduct S hS_finite C U X hX_eq x).val i) =
-                       (fun x ↦ (x.2 ⟨i, h_in_S⟩).val) := by
-          simp [splitProductToRestrictedProduct, h_in_S]
-      have h_cont_simple :
-        Continuous (fun (x : ↥U × (Π (i : {i | i ∉ S}), ↥(C i))) ↦ (x.2 ⟨i, h_in_S⟩).val) := by
-          sorry
-      -- Now rewrite the goal using this equality.
-      rwa [← h_fn_eq] at h_cont_simple
+      rw [RestrictedProduct.continuous_iff]
+      exact continuous_splitProductToRestrictedProduct_components C S hS_finite U X g hX_eq
 
   -- Show X = (Subtype.val ∘ g) '' univ
   have hX_eq_image : X = (Subtype.val ∘ g) '' Set.univ := by
