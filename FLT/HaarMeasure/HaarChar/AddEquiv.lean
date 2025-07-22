@@ -906,6 +906,7 @@ lemma restrictedProduct_subset_measure_open
 
 open ContinuousMulEquiv Classical RestrictedProduct in
 --@[to_additive, simp]
+@[simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight
   [∀ i, LocallyCompactSpace (G i)] [∀i, CompactSpace (G i)]
   (φ : Π i, (G i) ≃ₜ* (G i))
@@ -939,7 +940,6 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       C S X (by rfl) hCopen hS_finite
   have hS_def : S = {i | ¬Set.BijOn ⇑(φ i) ↑(C i) ↑(C i)} := rfl
   have hX_def : X = {x | ∀ i ∉ S, x i ∈ C i} := rfl
-  --todo: mulEquivHaarChar_restrictedProductCongrRight_X_compact
   have hXcompact : IsCompact X :=
     mulEquivHaarChar_restrictedProductCongrRight_X_compact
       φ hφ S hS_finite hS_def X hX_def U hU_open hU_compact hX_eq
@@ -957,9 +957,30 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       have h' := (ENNReal.mul_right_inj ne_zero ne_top).mp h
       rw [← ENNReal.coe_finprod] at h'
       exact ENNReal.coe_inj.mp h'
-  -- Now prove the suffices statement
-  -- First show that the automorphism preserves X
-  have h_preserves_X : (restrictedProductCongrRight φ hφ) '' X = X := by sorry
+  -- Now prove the suffices statement: show that the automorphism preserves X
+  have h_preserves_X : (restrictedProductCongrRight φ hφ) '' X = X := by
+    ext y
+    simp only [Set.mem_image]
+    constructor
+    · rintro ⟨x, hx, rfl⟩ -- y ∈ X by verifying: for all i ∉ S, we have y i ∈ C i
+      intro i hi
+      have hbij : Set.BijOn (φ i) (C i) (C i) := by
+        rw [Set.mem_setOf_eq] at hi; push_neg at hi; exact hi
+      exact hbij.mapsTo (hx i hi)
+    · intro hy -- Verifies preimage is in X by showing: for all i ∉ S, (φ i).symm (y i) ∈ C i
+      use (restrictedProductCongrRight φ hφ).symm y
+      constructor
+      · intro i hi
+        have hbij : Set.BijOn (φ i) (C i) (C i) := by
+          rw [Set.mem_setOf_eq] at hi; push_neg at hi; exact hi
+        have : ∀ x ∈ C i, (φ i).symm x ∈ C i := by
+          intro x hx
+          obtain ⟨z, hz, rfl⟩ := hbij.surjOn hx
+          convert hz
+          simp
+        exact this (y i) (hy i hi)
+      · simp -- restrictedProductCongrRight φ hφ ((restrictedProductCongrRight φ hφ).symm y) = y
+
   -- Now use calc to prove the suffices
   calc (mulEquivHaarChar (restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X
       = haar ((restrictedProductCongrRight φ hφ) '' X) := by
