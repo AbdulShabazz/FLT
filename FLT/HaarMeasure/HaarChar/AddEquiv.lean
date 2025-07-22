@@ -718,22 +718,33 @@ lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
     restrictedProductToSplitProduct_comp_splitProductToRestrictedProduct
       S hS_finite C U X hX_eq
 
-  -- f is a continuous bijection from X to a compact space
-  have : CompactSpace (↥U × Π i : {i | i ∉ S}, ↥(C i)) := by
+  -- The composite Subtype.val ∘ g is continuous
+  have hg_cont : Continuous (Subtype.val ∘ g) := by sorry
+
+  -- Show X = (Subtype.val ∘ g) '' univ
+  have hX_eq_image : X = (Subtype.val ∘ g) '' Set.univ := by
+    ext x
+    simp only [Set.mem_image, Set.mem_univ, true_and, Function.comp_apply]
+    constructor
+    · intro hx
+      use f ⟨x, hx⟩
+      simp [hfg]
+    · rintro ⟨y, rfl⟩
+      exact (g y).property
+
+  -- X is the image of a compact set under a continuous map
+  rw [hX_eq_image]
+
+  -- The source space of g is compact
+  haveI hcompact : CompactSpace (U × Π i : {i | i ∉ S}, C i) := by
     -- First component: U is compact
-    haveI : CompactSpace ↥U := isCompact_iff_compactSpace.mp hU_compact
+    haveI : CompactSpace U := isCompact_iff_compactSpace.mp hU_compact
     -- Second component: product of compact spaces
-    haveI : ∀ i : {i | i ∉ S}, CompactSpace ↥(C i.val) := fun i => inferInstance -- Uses hCcompact!
+    haveI : ∀ i : {i | i ∉ S}, CompactSpace (C i.val) := fun i => inferInstance
     -- Now the product instance applies automatically
     exact inferInstance
 
-  -- Then use `CompactSpace.isCompact_univ` to get the `IsCompact` statement when needed.
-
-  -- Since f is a continuous bijection from X to a compact space,
-  -- and X is Hausdorff (as a subspace of a Hausdorff space),
-  -- f is a homeomorphism and X is compact
-
-  sorry -- Complete using that continuous bijection from compact to Hausdorff is homeomorphism
+  exact (@isCompact_univ _ _ hcompact).image hg_cont
 
 open Classical in
 noncomputable def X_eq_intersection
