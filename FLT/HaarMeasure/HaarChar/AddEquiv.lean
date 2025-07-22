@@ -489,6 +489,7 @@ variable {ι : Type*}
 
 omit [∀ (i : ι), BorelSpace (G i)] [∀ i, MeasurableSpace (G i)] in
 --@[to_additive, simp]
+@[simp]
 lemma restrictedProduct_subset_measure_open_pos
     [∀ i, LocallyCompactSpace (G i)]
     [∀i, CompactSpace (G i)]
@@ -511,7 +512,7 @@ lemma restrictedProduct_subset_measure_open_pos
 
 omit [∀ (i : ι), IsTopologicalGroup (G i)] [∀ (i : ι), BorelSpace (G i)]
 [Π i, TopologicalSpace (G i)] [∀ i, MeasurableSpace (G i)] in
-@[to_additive, simp]
+@[to_additive (attr := simp ) simp]
 lemma restrictedProduct_subset_eq_prod_subset
   [∀ i, TopologicalSpace (G i)] [∀ i, CompactSpace (G i)]
   (hCopen : Fact (∀ i, IsOpen (↑(C i) : Set (G i))))
@@ -535,6 +536,7 @@ lemma restrictedProduct_subset_eq_prod_subset
   exact isCompact_univ
 
 /-- Projection from restricted product subset to product over S and complement -/
+@[to_additive (attr := simp) restrictedSumToSplitSum, simp]
 def restrictedProductToSplitProduct
     (S : Set ι)
     (C : (i : ι) → Subgroup (G i))
@@ -553,6 +555,7 @@ def restrictedProductToSplitProduct
       exact this.2 i.val i.property⟩)
 
 /-- Inverse map from split product to restricted product subset -/
+@[to_additive (attr := simp) splitSumToRestrictedSum, simp]
 def splitProductToRestrictedProduct
     (S : Set ι)
     [DecidablePred (· ∈ S)]
@@ -697,6 +700,7 @@ lemma RestrictedProduct.continuous_iff.{u, v, w}
     : Continuous f ↔ ∀ i, Continuous (fun x ↦ f x i) := by
   sorry
 
+@[simp]
 lemma continuous_splitProductToRestrictedProduct_components
     {ι : Type*} {G : ι → Type*}
     -- Typeclasses
@@ -738,7 +742,9 @@ lemma continuous_splitProductToRestrictedProduct_components
     rwa [← h_fn_eq] at h_cont_simple
 
 open ContinuousMulEquiv Classical in
---@[to_additive, simp]
+--@[to_additive (attr := simp) addEquivAddChar_restrictedProductCongrRight_X_compact
+--  "The additive version of the docstring.", simp]
+@[simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
     [∀ i, CompactSpace (G i)]
     (φ : Π i, (G i) ≃ₜ* (G i))
