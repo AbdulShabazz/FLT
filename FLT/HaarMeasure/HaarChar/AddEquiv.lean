@@ -687,7 +687,7 @@ lemma restrictedProductToSplitProduct_comp_splitProductToRestrictedProduct
     simp only [dif_neg i.property]
 
 open ContinuousMulEquiv Classical in
---@[to_additive, simp]
+@[to_additive, simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
     [∀ i, CompactSpace (G i)]
     (φ : Π i, (G i) ≃ₜ* (G i))
