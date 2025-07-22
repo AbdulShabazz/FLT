@@ -744,6 +744,7 @@ lemma continuous_splitProductToRestrictedProduct_components
 open ContinuousMulEquiv Classical in
 --@[to_additive (attr := simp) addEquivAddChar_restrictedProductCongrRight_X_compact
 --  "The additive version of the docstring.", simp]
+omit hCopen [∀ (i : ι), BorelSpace (G i)] [(i : ι) → MeasurableSpace (G i)] in
 @[simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
     [∀ i, CompactSpace (G i)]
