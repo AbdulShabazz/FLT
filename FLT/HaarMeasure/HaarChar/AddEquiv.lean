@@ -711,7 +711,6 @@ lemma continuous_splitProductToRestrictedProduct_components
     (hS_finite : S.Finite)
     (U : Set ((i : ↑S) → G ↑i))
     (X : Set Πʳ (i : ι), [G i, ↑(C i)])
-    (g : ↑U × ((i : ↑{i | i ∉ S}) → ↥(C ↑i)) → ↑X)
     [DecidablePred fun x ↦ x ∈ S]
     (hX_eq : X = {x | (fun i : S ↦ x i.val) ∈ U ∧ ∀ i ∉ S, x i ∈ C i})
     -- The proposition the lemma proves
@@ -727,7 +726,13 @@ lemma continuous_splitProductToRestrictedProduct_components
         simp [splitProductToRestrictedProduct, h_in_S]
     have h_cont_simple :
       Continuous (fun (x : ↥U × (Π (i : {i | i ∉ S}), ↥(C i))) ↦ x.1.val ⟨i, h_in_S⟩) := by
-        sorry
+      -- Extract the components with explicit types
+      have h1 : Continuous (fun (x : ↥U × (Π (i : {i | i ∉ S}), ↥(C i))) ↦ x.1) := continuous_fst
+      have h2 : Continuous (fun (u : ↥U) ↦ u.val) := continuous_subtype_val
+      have h3 : Continuous (fun (f : (i : ↑S) → G ↑i) ↦ f ⟨i, h_in_S⟩) :=
+        continuous_apply (⟨i, h_in_S⟩ : ↑S)
+      -- Compose them
+      exact h3.comp (h2.comp h1)
     -- Now rewrite the goal using this equality.
     rwa [← h_fn_eq] at h_cont_simple
   · -- Case 2: `i ∉ S`
@@ -737,7 +742,13 @@ lemma continuous_splitProductToRestrictedProduct_components
         simp [splitProductToRestrictedProduct, h_in_S]
     have h_cont_simple :
       Continuous (fun (x : ↥U × (Π (i : {i | i ∉ S}), ↥(C i))) ↦ (x.2 ⟨i, h_in_S⟩).val) := by
-        sorry
+      -- Extract the components with explicit types
+      have h1 : Continuous (fun (x : ↥U × (Π (i : {i | i ∉ S}), ↥(C i))) ↦ x.2) := continuous_snd
+      have h2 : Continuous (fun (f : (i : {i | i ∉ S}) → ↥(C ↑i)) ↦ f ⟨i, h_in_S⟩) :=
+        continuous_apply (⟨i, h_in_S⟩ : {i | i ∉ S})
+      have h3 : Continuous (fun (c : ↥(C i)) ↦ c.val) := continuous_subtype_val
+      -- Compose them
+      exact h3.comp (h2.comp h1)
     -- Now rewrite the goal using this equality.
     rwa [← h_fn_eq] at h_cont_simple
 
@@ -781,7 +792,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
   have hg_cont : Continuous (Subtype.val ∘ g) := by
     -- We state that it is sufficient to prove that each component function is continuous.
       rw [RestrictedProduct.continuous_iff]
-      exact continuous_splitProductToRestrictedProduct_components C S hS_finite U X g hX_eq
+      exact continuous_splitProductToRestrictedProduct_components C S hS_finite U X hX_eq
 
   -- Show X = (Subtype.val ∘ g) '' univ
   have hX_eq_image : X = (Subtype.val ∘ g) '' Set.univ := by
