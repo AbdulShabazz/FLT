@@ -710,6 +710,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
     splitProductToRestrictedProduct S hS_finite C U X hX_eq
 
   -- Show f and g are inverses
+  
   have hfg : ∀ x, g (f x) = x :=
     splitProductToRestrictedProduct_comp_restrictedProductToSplitProduct
       S hS_finite C U X hX_eq
@@ -718,8 +719,34 @@ lemma mulEquivHaarChar_restrictedProductCongrRight_X_compact
     restrictedProductToSplitProduct_comp_splitProductToRestrictedProduct
       S hS_finite C U X hX_eq
 
-  -- The composite Subtype.val ∘ g is continuous
-  have hg_cont : Continuous (Subtype.val ∘ g) := by sorry
+  -- show (Subtype.val ∘ g) is continuous
+  have hg_cont : Continuous (Subtype.val ∘ g) := by
+    -- We state that it is sufficient to prove that each component function is continuous.
+    suffices h_all_components_continuous :
+      ∀ (i : ι), Continuous (fun x ↦ (Subtype.val ∘ g) x i) by sorry
+    intro i
+    dsimp [g, Function.comp]
+    by_cases h_in_S : i ∈ S
+    · -- Case 1: `i ∈ S`
+      -- We first prove that our function simplifies to a composition of projections.
+      have h_fn_eq : (fun x ↦ (splitProductToRestrictedProduct S hS_finite C U X hX_eq x).val i) =
+        (fun x ↦ x.1.val ⟨i, h_in_S⟩) := by
+          simp [splitProductToRestrictedProduct, h_in_S]
+      have h_cont_simple :
+        Continuous (fun (x : ↥U × (Π (i : {i | i ∉ S}), ↥(C i))) ↦ x.1.val ⟨i, h_in_S⟩) := by
+          sorry
+      -- Now rewrite the goal using this equality.
+      rwa [← h_fn_eq] at h_cont_simple
+    · -- Case 2: `i ∉ S`
+      -- We first prove that our function simplifies to a composition of projections.
+      have h_fn_eq : (fun x ↦ (splitProductToRestrictedProduct S hS_finite C U X hX_eq x).val i) =
+                       (fun x ↦ (x.2 ⟨i, h_in_S⟩).val) := by
+          simp [splitProductToRestrictedProduct, h_in_S]
+      have h_cont_simple :
+        Continuous (fun (x : ↥U × (Π (i : {i | i ∉ S}), ↥(C i))) ↦ (x.2 ⟨i, h_in_S⟩).val) := by
+          sorry
+      -- Now rewrite the goal using this equality.
+      rwa [← h_fn_eq] at h_cont_simple
 
   -- Show X = (Subtype.val ∘ g) '' univ
   have hX_eq_image : X = (Subtype.val ∘ g) '' Set.univ := by
