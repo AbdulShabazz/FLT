@@ -5,6 +5,7 @@ import FLT.Mathlib.MeasureTheory.Measure.Regular
 import FLT.Mathlib.MeasureTheory.Group.Measure
 import Mathlib.Algebra.Group.Basic
 import Mathlib.Data.ENNReal.Inv
+import Mathlib.Algebra.Group.Action.Defs
 --import Mathlib.Topology.Compactness.Bases
 --import Mathlib.Topology.Compactness.Compact
 --import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
@@ -936,6 +937,10 @@ lemma ENNReal.eq_inv_mul_iff_mul_eq'
   · intro h
     sorry
 
+lemma ENNReal.smul_smul_measure {α : Type*} [MeasurableSpace α]
+    (a b : ℝ≥0∞) (μ : Measure α) : a • b • μ = (a * b) • μ := by
+  sorry
+
 open ContinuousMulEquiv Classical RestrictedProduct in
 --@[to_additive, simp]
 @[simp]
@@ -1023,9 +1028,33 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
     -- The fundamental theorem defining `c` is `mulEquivHaarChar_map`, which gives:
     -- `c • map ψ haar = haar`
     have h_map_identity := mulEquivHaarChar_map haar ψ
+    have hc_pos : 0 < c := mulEquivHaarChar_pos ψ
+    -- Multiply both sides by c to solve for `haar (ψ '' X)`
+    have hc_ne_top : c_ennreal ≠ ⊤ := ENNReal.coe_ne_top
+    have hc_ne_zero : c_ennreal ≠ 0 := ENNReal.coe_ne_zero.mpr hc_pos.ne'
+    have h_ennreal : c_ennreal • Measure.map (⇑ψ) haar = haar := by
+      -- Use measure extensionality
+      ext s
+      -- Now we need to show equality on each set
+      change (↑c : ℝ≥0∞) * (Measure.map (⇑ψ) haar) s = haar s
+      -- Use that ℝ≥0 scalar mult equals ℝ≥0∞ scalar mult
+      rw [← Measure.nnreal_smul_coe_apply]
+      -- Now apply h_map_identity
+      exact congr_arg (· s) h_map_identity
 
     -- From this, we get: `map ψ haar = c⁻¹ • haar`
     have h_map_inv : Measure.map (⇑ψ) haar = c_ennreal⁻¹ • haar := by
+      -- From h_map_identity: c • map ψ haar = haar (where c : ℝ≥0)
+      -- First convert to ENNReal scalar multiplication
+      have h_map_inv : Measure.map (⇑ψ) haar = c_ennreal⁻¹ • haar := by
+        -- From h_ennreal: c_ennreal • Measure.map (⇑ψ) haar = haar
+        have : c_ennreal⁻¹ • (c_ennreal • Measure.map (⇑ψ) haar) = c_ennreal⁻¹ • haar := by
+          rw [h_ennreal]
+        -- Rewrite the LHS using our lemma
+        rw [ENNReal.smul_smul_measure] at this
+        -- Now simplify c_ennreal⁻¹ * c_ennreal = 1
+        rw [ENNReal.inv_mul_cancel hc_ne_zero hc_ne_top, one_smul] at this
+        exact this
       sorry
 
     -- Apply both sides to `ψ '' X`
@@ -1034,7 +1063,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
 
     -- Simplify the LHS using the fact that map pulls back the preimage
     have h_lhs : (Measure.map (⇑ψ) haar) (ψ '' X) = haar X := by
-      sorry
+      sorry--rw [Measure.map_apply ψ.continuous.measurable, ψ.toEquiv.preimage_image]
 
     -- Simplify the RHS using the definition of scalar multiplication
     have h_rhs : (c_ennreal⁻¹ • haar) (ψ '' X) = c_ennreal⁻¹ * haar (ψ '' X) := by
@@ -1045,8 +1074,6 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
     have h_combined : haar X = c_ennreal⁻¹ * haar (ψ '' X) := by
       rw [← h_lhs, h_on_image, h_rhs]
 
-    -- Multiply both sides by c to solve for `haar (ψ '' X)`
-    have hc_ne_top : c_ennreal ≠ ⊤ := ENNReal.coe_ne_top
     have h_final : c_ennreal * haar X = haar (ψ '' X) := by
       -- We rewrite our goal using the `iff` lemma for ENNReal.
       rw [← ENNReal.eq_inv_mul_iff_mul_eq'
