@@ -1018,40 +1018,43 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
     -- Let `ψ` be our equivalence and `c` be its character for brevity.
     let ψ := restrictedProductCongrRight φ hφ
     let c := mulEquivHaarChar ψ
+    let c_ennreal := (c : ℝ≥0∞)
 
     -- The fundamental theorem defining `c` is `mulEquivHaarChar_map`, which gives:
     -- `c • map ψ haar = haar`
     have h_map_identity := mulEquivHaarChar_map haar ψ
 
     -- From this, we get: `map ψ haar = c⁻¹ • haar`
-    have h_map_inv : Measure.map (⇑ψ) haar = c⁻¹ • haar := by
-      sorry--rw [← h_map_identity, smul_inv_smul₀ (mulEquivHaarChar_pos ψ).ne']
+    have h_map_inv : Measure.map (⇑ψ) haar = c_ennreal⁻¹ • haar := by
+      sorry
 
     -- Apply both sides to `ψ '' X`
-    have h_on_image : (Measure.map (⇑ψ) haar) (ψ '' X) = (c⁻¹ • haar) (ψ '' X) := by
+    have h_on_image : (Measure.map (⇑ψ) haar) (ψ '' X) = (c_ennreal⁻¹ • haar) (ψ '' X) := by
       rw [h_map_inv]
 
     -- Simplify the LHS using the fact that map pulls back the preimage
     have h_lhs : (Measure.map (⇑ψ) haar) (ψ '' X) = haar X := by
-      sorry--rw [Measure.map_apply ψ.continuous.measurable, ψ.toEquiv.preimage_image]
+      sorry
 
     -- Simplify the RHS using the definition of scalar multiplication
-    have h_rhs : (c⁻¹ • haar) (ψ '' X) = c⁻¹ * haar (ψ '' X) := by
-      sorry--rw [Measure.smul_apply, smul_eq_mul]
+    have h_rhs : (c_ennreal⁻¹ • haar) (ψ '' X) = c_ennreal⁻¹ * haar (ψ '' X) := by
+      -- This is the definition of scalar multiplication on a measure.
+      simp [Measure.smul_apply]
 
     -- Combine to get: `haar X = c⁻¹ * haar (ψ '' X)`
-    have h_combined : haar X = c⁻¹ * haar (ψ '' X) := by
+    have h_combined : haar X = c_ennreal⁻¹ * haar (ψ '' X) := by
       rw [← h_lhs, h_on_image, h_rhs]
 
-    -- Multiply both sides by c
-    have hc_ne_zero : (c : ℝ≥0∞) ≠ 0 := ENNReal.coe_ne_zero.mpr (mulEquivHaarChar_pos ψ).ne'
-    have hc_ne_top : (c : ℝ≥0∞) ≠ ⊤ := ENNReal.coe_ne_top
+    -- Multiply both sides by c to solve for `haar (ψ '' X)`
+    have hc_ne_top : c_ennreal ≠ ⊤ := ENNReal.coe_ne_top
+    have h_final : c_ennreal * haar X = haar (ψ '' X) := by
+      -- We rewrite our goal using the `iff` lemma for ENNReal.
+      rw [← ENNReal.eq_inv_mul_iff_mul_eq'
+        (ENNReal.coe_ne_zero.mpr (mulEquivHaarChar_pos ψ).ne') hc_ne_top]
+      -- The goal is now exactly our `h_combined` hypothesis.
+      exact h_combined
 
-    have h_final : c * haar X = haar (ψ '' X) := by sorry
-      /- rw [← ENNReal.mul_right_inj hc_ne_zero hc_ne_top, ← mul_assoc,
-          ENNReal.mul_inv_cancel hc_ne_zero hc_ne_top, one_mul] at h_combined
-      exact h_combined -/
-
+    -- The goal is the symmetric version of `h_final`.
     exact h_final.symm
   rw [← h_scale]
   -- Step 2: The crucial (and sorry'd) lemma from product measure theory.
