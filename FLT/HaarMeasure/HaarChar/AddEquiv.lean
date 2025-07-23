@@ -980,47 +980,22 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
           simp
         exact this (y i) (hy i hi)
       · simp -- restrictedProductCongrRight φ hφ ((restrictedProductCongrRight φ hφ).symm y) = y
-
-  -- Now use calc to prove the suffices
-  calc (mulEquivHaarChar (restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X
-      = haar ((restrictedProductCongrRight φ hφ) '' X) := by
-        -- Step 1: Use that mulEquivHaarChar scales Haar measure
-        -- We need: ∀ φ : G ≃ₜ* G, ∀ E, haar (φ '' E) = mulEquivHaarChar φ • haar E
-        have h_scale : ∀ (ψ : (Πʳ i, [G i, C i]) ≃ₜ*
-          (Πʳ i, [G i, C i])) (E : Set (Πʳ i, [G i, C i])),
-            haar (ψ '' E) = (mulEquivHaarChar ψ : ℝ≥0∞) • haar E := by sorry
-        rw [h_scale]
-        simp
-    _ = haar X := by
-        -- Step 2: Already have h_preserves_X
-        rw [h_preserves_X]
-    _ = 1 * haar X := by
-        -- Step 3: Trivial
-        rw [one_mul]
-    _ = (∏ᶠ i, (mulEquivHaarChar (φ i) : ℝ≥0∞)) * haar X := by
-        congr 1
-        -- Step 4: Show the product equals 1
-        -- Break this into showing each factor outside S equals 1
-        have h_prod_split : ∏ᶠ i, (mulEquivHaarChar (φ i) : ℝ≥0∞) =
-                          ∏ i ∈ hS_finite.toFinset, (mulEquivHaarChar (φ i) : ℝ≥0∞) := by sorry
-          -- The infinite product equals the finite product over S
-          /- apply finprod_eq_prod_of_mulSupport_subset hS_finite
-          intro i hi
-          simp only [mulSupport_subset_iff, ne_eq, one_ne_zero, not_false_eq_true,
-                    forall_true_left] at hi
-          -- Need to show: i ∉ S → mulEquivHaarChar (φ i) = 1
-          have h_preserves : Set.BijOn ⇑(φ i) ↑(C i) ↑(C i) := by
-            by_contra h
-            exact absurd h (hi · rfl)
-          -- Now show mulEquivHaarChar = 1 when φ preserves a compact subgroup
-          have : mulEquivHaarChar (φ i) = 1 := by sorry -- Key lemma needed!
-          simp [this] -/
-        -- Now we need to relate the finite product to the action on X
-        have h_factor : ∏ i ∈ hS_finite.toFinset, (mulEquivHaarChar (φ i) : ℝ≥0∞) = 1 := by
-          -- This should follow from how restrictedProductCongrRight acts on X
-          sorry
-        rw [h_prod_split, h_factor]
-  -- FLT#552
+  -- This relies on the fundamental scaling property of mulEquivHaarChar
+  have h_scale : haar ((restrictedProductCongrRight φ hφ) '' X) =
+    (mulEquivHaarChar (restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X := by
+      sorry
+  rw [← h_scale]
+  -- Step 2: The crucial (and sorry'd) lemma from product measure theory.
+  -- This states that the measure of the transformed set is the finitary product
+  -- of the local scaling factors times the measure of the original set.
+  have h_haar_image_eq_prod : haar ((restrictedProductCongrRight φ hφ) '' X) =
+    (∏ᶠ i, mulEquivHaarChar (φ i) : ℝ≥0∞) * haar X := by
+      -- This proof would involve the definition of `haar` as a product measure
+      -- and showing how the measure of the product of images is the product
+      -- of the measures of the images.
+      sorry
+  -- Step 3: The goal is now a direct consequence of this key lemma.
+  exact h_haar_image_eq_prod -- FLT#552
 
 end restrictedproduct
 
