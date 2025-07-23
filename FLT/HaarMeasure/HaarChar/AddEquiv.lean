@@ -3,6 +3,8 @@ import FLT.Mathlib.Topology.Algebra.ContinuousMonoidHom
 import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 import FLT.Mathlib.MeasureTheory.Measure.Regular
 import FLT.Mathlib.MeasureTheory.Group.Measure
+import Mathlib.Algebra.Group.Basic
+import Mathlib.Data.ENNReal.Inv
 --import Mathlib.Topology.Compactness.Bases
 --import Mathlib.Topology.Compactness.Compact
 --import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
@@ -904,6 +906,36 @@ lemma restrictedProduct_subset_measure_open
   -- or it's the preimage of the open set C i under the continuous projection
   exact restrictedProduct_subset_isOpen C hCopen S hS_finite
 
+-- This lemma is the equivalent of the `Measure.map_image` you were looking for.
+lemma measure_image_of_measurable_equiv
+  {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+  (μ : Measure α) (e : α ≃ᵐ β) (s : Set α)
+  : μ.map e (e '' s) = μ s := by
+  sorry
+
+/--
+For `a, b, c` in `ℝ≥0∞`, the equality `a = b⁻¹ * c` is equivalent to `b * a = c`,
+provided `b` is invertible (i.e., not `0` or `∞`).
+-/
+lemma ENNReal.eq_inv_mul_iff_mul_eq'
+  {a b c : ℝ≥0∞} (hb_ne_zero : b ≠ 0) (hb_ne_top : b ≠ ⊤) :
+  a = b⁻¹ * c ↔ b * a = c := by
+  constructor
+  -- 1. Forward direction: `a = b⁻¹ * c → b * a = c`
+  · intro h
+    -- Substitute `a` using the hypothesis `h`.
+    rw [h]
+    -- The goal is now `b * (b⁻¹ * c) = c`.
+    -- Use associativity to regroup.
+    rw [← mul_assoc]
+    -- Since `b` is not 0 or ∞, `b * b⁻¹ = 1`.
+    rw [ENNReal.mul_inv_cancel hb_ne_zero hb_ne_top]
+    -- The goal is now `1 * c = c`, which is true.
+    rw [one_mul]
+  -- 2. Backward direction: `b * a = c → a = b⁻¹ * c`
+  · intro h
+    sorry
+
 open ContinuousMulEquiv Classical RestrictedProduct in
 --@[to_additive, simp]
 @[simp]
@@ -983,7 +1015,44 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
   -- This relies on the fundamental scaling property of mulEquivHaarChar
   have h_scale : haar ((restrictedProductCongrRight φ hφ) '' X) =
     (mulEquivHaarChar (restrictedProductCongrRight φ hφ) : ℝ≥0∞) * haar X := by
-      sorry
+    -- Let `ψ` be our equivalence and `c` be its character for brevity.
+    let ψ := restrictedProductCongrRight φ hφ
+    let c := mulEquivHaarChar ψ
+
+    -- The fundamental theorem defining `c` is `mulEquivHaarChar_map`, which gives:
+    -- `c • map ψ haar = haar`
+    have h_map_identity := mulEquivHaarChar_map haar ψ
+
+    -- From this, we get: `map ψ haar = c⁻¹ • haar`
+    have h_map_inv : Measure.map (⇑ψ) haar = c⁻¹ • haar := by
+      sorry--rw [← h_map_identity, smul_inv_smul₀ (mulEquivHaarChar_pos ψ).ne']
+
+    -- Apply both sides to `ψ '' X`
+    have h_on_image : (Measure.map (⇑ψ) haar) (ψ '' X) = (c⁻¹ • haar) (ψ '' X) := by
+      rw [h_map_inv]
+
+    -- Simplify the LHS using the fact that map pulls back the preimage
+    have h_lhs : (Measure.map (⇑ψ) haar) (ψ '' X) = haar X := by
+      sorry--rw [Measure.map_apply ψ.continuous.measurable, ψ.toEquiv.preimage_image]
+
+    -- Simplify the RHS using the definition of scalar multiplication
+    have h_rhs : (c⁻¹ • haar) (ψ '' X) = c⁻¹ * haar (ψ '' X) := by
+      sorry--rw [Measure.smul_apply, smul_eq_mul]
+
+    -- Combine to get: `haar X = c⁻¹ * haar (ψ '' X)`
+    have h_combined : haar X = c⁻¹ * haar (ψ '' X) := by
+      rw [← h_lhs, h_on_image, h_rhs]
+
+    -- Multiply both sides by c
+    have hc_ne_zero : (c : ℝ≥0∞) ≠ 0 := ENNReal.coe_ne_zero.mpr (mulEquivHaarChar_pos ψ).ne'
+    have hc_ne_top : (c : ℝ≥0∞) ≠ ⊤ := ENNReal.coe_ne_top
+
+    have h_final : c * haar X = haar (ψ '' X) := by sorry
+      /- rw [← ENNReal.mul_right_inj hc_ne_zero hc_ne_top, ← mul_assoc,
+          ENNReal.mul_inv_cancel hc_ne_zero hc_ne_top, one_mul] at h_combined
+      exact h_combined -/
+
+    exact h_final.symm
   rw [← h_scale]
   -- Step 2: The crucial (and sorry'd) lemma from product measure theory.
   -- This states that the measure of the transformed set is the finitary product
