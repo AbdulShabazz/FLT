@@ -970,8 +970,6 @@ lemma RestrictedProduct.mem_box'
     {x : RestrictedProduct R A 𝓕} :
   x ∈ box' A 𝓕 B ↔ ∀ i, x i ∈ B i := sorry
 
-
-
 open ContinuousMulEquiv Classical RestrictedProduct in
 /--
 mulEquivHaarChar_restrictedProductCongrRight:
