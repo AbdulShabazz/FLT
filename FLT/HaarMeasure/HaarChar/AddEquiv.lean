@@ -1167,8 +1167,10 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
     -- Next, establish the measure of the RHS `haar X`.
     have h_rhs_measure : haar X = ∏ᶠ i, haar (X_carrier_comp i) := by sorry
 
-    -- For the first goal: mulEquivHaarChar support
-    have h_char_support : (Function.mulSupport fun i ↦ ↑(mulEquivHaarChar (φ i))).Finite := by
+    -- For the first goal: Prove finite support for mulEquivHaarChar
+    have h_char_support :
+      (Function.mulSupport fun i ↦ ↑(mulEquivHaarChar (φ i) : ℝ≥0∞)).Finite := by
+      simp only [Function.mulSupport, ENNReal.coe_ne_one]
       -- The support is contained in S because for i ∉ S, φ i preserves C i
       have h_subset : Function.mulSupport (fun i ↦ ↑(mulEquivHaarChar (φ i))) ⊆ S := by
         intro i hi
@@ -1195,15 +1197,9 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       -- Sᶜ is cofinite, but we need actual finiteness
       sorry -- Need to show this is actually finite, not just cofinite -/
 
-    -- For the second goal: haar measure support
-    have h_char_support' :
-      (Function.mulSupport fun i ↦ (mulEquivHaarChar (φ i) : ℝ≥0∞)).Finite := by
-        simp only [Function.mulSupport, ENNReal.coe_ne_one]
-        exact h_char_support
-
     -- Finally, combine these pieces using the distributive property of finitary products.
     -- We start with the LHS measure, pull out the scaling factors, and substitute the RHS measure.
-    rw [h_lhs_measure, finprod_mul_distrib h_char_support' h_haar_support, ← h_rhs_measure]
+    rw [h_lhs_measure, finprod_mul_distrib h_char_support h_haar_support, ← h_rhs_measure]
   -- Step 3: The goal is now a direct consequence of this key lemma.
   exact h_haar_image_eq_prod -- FLT#552
 
