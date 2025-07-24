@@ -970,7 +970,16 @@ lemma RestrictedProduct.mem_box'
     {x : RestrictedProduct R A 𝓕} :
   x ∈ box' A 𝓕 B ↔ ∀ i, x i ∈ B i := sorry
 
+
+
 open ContinuousMulEquiv Classical RestrictedProduct in
+/--
+mulEquivHaarChar_restrictedProductCongrRight:
+key steps:
+* Identify the finite set S where φ doesn't preserve C
+* Construct the compact open subset X
+* Show the automorphism scales X by the product of individual characters
+* Handle the support finiteness conditions for the finitary product -/
 --@[to_additive, simp]
 @[simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight
