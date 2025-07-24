@@ -1033,29 +1033,21 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
     have hc_ne_top : c_ennreal ≠ ⊤ := ENNReal.coe_ne_top
     have hc_ne_zero : c_ennreal ≠ 0 := ENNReal.coe_ne_zero.mpr hc_pos.ne'
     have h_ennreal : c_ennreal • Measure.map (⇑ψ) haar = haar := by
-      -- Use measure extensionality
-      ext s
-      -- Now we need to show equality on each set
-      change (↑c : ℝ≥0∞) * (Measure.map (⇑ψ) haar) s = haar s
-      -- Use that ℝ≥0 scalar mult equals ℝ≥0∞ scalar mult
-      rw [← Measure.nnreal_smul_coe_apply]
-      -- Now apply h_map_identity
-      exact congr_arg (· s) h_map_identity
+        rw [← ENNReal.smul_def]
+        exact h_map_identity
 
     -- From this, we get: `map ψ haar = c⁻¹ • haar`
     have h_map_inv : Measure.map (⇑ψ) haar = c_ennreal⁻¹ • haar := by
-      -- From h_map_identity: c • map ψ haar = haar (where c : ℝ≥0)
-      -- First convert to ENNReal scalar multiplication
-      have h_map_inv : Measure.map (⇑ψ) haar = c_ennreal⁻¹ • haar := by
-        -- From h_ennreal: c_ennreal • Measure.map (⇑ψ) haar = haar
-        have : c_ennreal⁻¹ • (c_ennreal • Measure.map (⇑ψ) haar) = c_ennreal⁻¹ • haar := by
-          rw [h_ennreal]
-        -- Rewrite the LHS using our lemma
-        rw [ENNReal.smul_smul_measure] at this
-        -- Now simplify c_ennreal⁻¹ * c_ennreal = 1
-        rw [ENNReal.inv_mul_cancel hc_ne_zero hc_ne_top, one_smul] at this
-        exact this
-      sorry
+
+      -- We want to solve for `Measure.map (⇑ψ) haar`. We can do this by
+      -- multiplying both sides by `c_ennreal⁻¹`. The lemma `inv_smul_eq_iff₀`
+      -- achieves this, provided the scalar is non-zero.
+      have hc_ne_zero : c_ennreal ≠ 0 :=
+        ENNReal.coe_ne_zero.mpr (mulEquivHaarChar_pos ψ).ne'
+
+      -- We use the reverse direction of the `iff` lemma to rewrite our identity.
+      -- `y₀ • x = y ↔ x = y₀⁻¹ • y`
+      sorry -- rwa [inv_smul_eq_iff₀ hc_ne_zero] at h_ennreal
 
     -- Apply both sides to `ψ '' X`
     have h_on_image : (Measure.map (⇑ψ) haar) (ψ '' X) = (c_ennreal⁻¹ • haar) (ψ '' X) := by
