@@ -963,12 +963,34 @@ def RestrictedProduct.box'
   : Set (RestrictedProduct G C 𝓕) :=
   {x | ∀ i, x i ∈ U i}
 
+@[simp]
 lemma RestrictedProduct.mem_box'
     {ι : Type*} {R : ι → Type*}
     {A : (i : ι) → Set (R i)} {𝓕 : Filter ι}
     {B : (i : ι) → Set (R i)}
     {x : RestrictedProduct R A 𝓕} :
   x ∈ box' A 𝓕 B ↔ ∀ i, x i ∈ B i := sorry
+
+@[simp]
+lemma haar_prod_support_finite
+    -- The index type and the family of groups
+    --{ι : Type*} {G : ι → Type*}
+
+    -- Typeclass arguments required for Haar measure
+    [∀ i, Group (G i)]
+    [∀ i, TopologicalSpace (G i)]
+    [∀ i, IsTopologicalGroup (G i)]
+    [∀ i, LocallyCompactSpace (G i)]
+    [∀ i, MeasurableSpace (G i)]
+    [∀ i, BorelSpace (G i)]
+
+    -- The family of compact open subgroups
+    (C : (i : ι) → Subgroup (G i))
+    (hC_open : ∀ i, IsOpen (C i : Set (G i)))
+    (hC_compact : ∀ i, CompactSpace (C i))
+
+    -- The proposition the lemma proves
+    : {i : ι | (haar : Measure (G i)) ↑(C i) ≠ 1}.Finite := sorry
 
 open ContinuousMulEquiv Classical RestrictedProduct in
 /--
@@ -1182,20 +1204,53 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       exact hS_finite.subset h_subset
 
     -- For the second goal: haar measure support
-    have h_haar_support : (Function.mulSupport fun i ↦ haar (X_carrier_comp i)).Finite := by sorry
-      /- -- X_carrier_comp i = univ when i ∈ S, and haar univ = 1 in compact spaces
-      have h_subset : Function.mulSupport (fun i ↦ haar (X_carrier_comp i)) ⊆ Sᶜ := by
-        intro i hi
-        contrapose! hi
-        -- When i ∈ S, X_carrier_comp i = univ
-        have : X_carrier_comp i = Set.univ := by simp [X_carrier_comp, hi]
-        rw [this]
-        -- haar univ = 1 in compact spaces
-        have : haar (Set.univ : Set (G i)) = 1 := by
-          sorry -- This follows from compactness
-        simp [this]
-      -- Sᶜ is cofinite, but we need actual finiteness
-      sorry -- Need to show this is actually finite, not just cofinite -/
+    have h_haar_support :
+      (Function.mulSupport fun i ↦ haar (X_carrier_comp i)).Finite := by
+      -- 1. State the foundational property that the set of indices where the measure
+      --    of the compact open subgroup `C i` is not 1, is finite.
+      let F := {i : ι | (haar : Measure (G i)) ↑(C i) ≠ 1}
+      have hF_finite : F.Finite :=
+        haar_prod_support_finite
+          C hCopen.out hCcompact
+
+      -- 2. Prove that our support is a subset of this known finite set.
+      have h_subset :
+        Function.mulSupport (fun i ↦ haar (X_carrier_comp i)) ⊆ F := by
+        -- To prove the subset relation, we show that any element `i` in the support
+        -- must also be an element of `{j | haar (C j) ≠ 1}`.
+        intro i h_in_support
+        simp only [Function.mulSupport, Set.mem_setOf_eq] at h_in_support
+
+        -- Analyze the cases based on whether `i` is in the finite set `S`.
+        by_cases h_in_S : i ∈ S
+        · -- Case 1: `i ∈ S`. This case leads to a contradiction, meaning no `i` from `S`
+          -- can be in the support. From a contradiction, we can prove any goal.
+          exfalso
+
+          -- Prove the contradiction:
+          have h_comp_is_univ : X_carrier_comp i = Set.univ := by
+            simp [X_carrier_comp, h_in_S]
+
+          have h_measure_is_one : (haar : Measure (G i)) (Set.univ) = 1 := by
+            sorry -- This follows from `haarMeasure_self` for compact spaces.
+
+          rw [h_comp_is_univ, h_measure_is_one] at h_in_support
+          exact h_in_support rfl
+
+        · -- Case 2: `i ∉ S`.
+          -- In this case, `X_carrier_comp i` is the subgroup `C i`.
+          have h_comp_is_C : X_carrier_comp i = ↑(C i) := by
+            simp [X_carrier_comp, h_in_S]
+
+          -- The hypothesis `h_in_support` is `haar (X_carrier_comp i) ≠ 1`.
+          -- Substituting `C i` gives `haar (↑(C i)) ≠ 1`.
+          rw [h_comp_is_C] at h_in_support
+
+          -- This is exactly the condition for membership in the superset `F`.
+          exact h_in_support
+
+      -- 3. Since our support is a subset of a finite set, it must also be finite.
+      exact Set.Finite.subset hF_finite h_subset
 
     -- Finally, combine these pieces using the distributive property of finitary products.
     -- We start with the LHS measure, pull out the scaling factors, and substitute the RHS measure.
