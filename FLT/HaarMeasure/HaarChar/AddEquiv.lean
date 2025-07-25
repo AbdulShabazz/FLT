@@ -992,6 +992,24 @@ lemma haar_prod_support_finite
     -- The proposition the lemma proves
     : {i : ι | (haar : Measure (G i)) ↑(C i) ≠ 1}.Finite := sorry
 
+lemma haarMeasure_univ
+    -- The group type
+    {G : Type*}
+
+    -- Standard typeclasses for defining a Haar measure
+    [Group G]
+    [TopologicalSpace G]
+    [IsTopologicalGroup G]
+    [LocallyCompactSpace G]
+    [MeasurableSpace G]
+    [BorelSpace G]
+
+    -- The key hypothesis that the space is compact
+    [CompactSpace G]
+
+    -- The proposition the lemma proves
+    : (haar : Measure G) (Set.univ) = 1 := by sorry
+
 open ContinuousMulEquiv Classical RestrictedProduct in
 /--
 mulEquivHaarChar_restrictedProductCongrRight:
@@ -1187,7 +1205,8 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       exact h_local_scale i
 
     -- Next, establish the measure of the RHS `haar X`.
-    have h_rhs_measure : haar X = ∏ᶠ i, haar (X_carrier_comp i) := by sorry
+    have h_rhs_measure : haar X = ∏ᶠ i, haar (X_carrier_comp i) := by
+      rw [hX_is_prod, haar_box_is_finprod]
 
     -- For the first goal: Prove finite support for mulEquivHaarChar
     have h_char_support :
@@ -1232,7 +1251,11 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
             simp [X_carrier_comp, h_in_S]
 
           have h_measure_is_one : (haar : Measure (G i)) (Set.univ) = 1 := by
-            sorry -- This follows from `haarMeasure_self` for compact spaces.
+            -- This follows from `haarMeasure_self` for compact spaces.
+            -- The canonical Haar measure of a compact space is 1.
+            -- Lean finds the necessary instances `[IsHaarMeasure haar]`
+            -- and `[CompactSpace (G i)]` automatically.
+            exact haarMeasure_univ -- (haar : Measure (G i))
 
           rw [h_comp_is_univ, h_measure_is_one] at h_in_support
           exact h_in_support rfl
