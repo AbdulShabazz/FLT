@@ -1213,7 +1213,21 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
         exact h_map_identity
 
     -- From this, we get: `map ψ haar = c⁻¹ • haar`
-    have h_map_inv : Measure.map (⇑ψ) haar = c_ennreal⁻¹ • haar := by sorry
+    have h_map_inv : Measure.map (⇑ψ) haar = c_ennreal⁻¹ • haar := by
+      -- Start with the goal, and on the right-hand side, substitute `haar`
+      rw [← h_ennreal] -- which uses the correct ℝ≥0∞ scalar
+      -- The goal is now `map ψ haar = c_ennreal⁻¹ • (c_ennreal • map ψ haar)`.
+
+      -- Use the associativity of scalar multiplication on measures (`a • (b • μ) = (a * b) • μ`).
+      rw [← mul_smul]
+
+      -- Since `c_ennreal` is known to be non-zero and finite, `c⁻¹ * c = 1`.
+      rw [ENNReal.inv_mul_cancel hc_ne_zero hc_ne_top]
+
+      -- The goal becomes `map ψ haar = 1 • map ψ haar`, which is true by definition.
+      rw [one_smul]
+
+      rw [h_ennreal]
 
     -- Apply both sides to `ψ '' X`
     have h_on_image : (Measure.map (⇑ψ) haar) (ψ '' X) = (c_ennreal⁻¹ • haar) (ψ '' X) := by
