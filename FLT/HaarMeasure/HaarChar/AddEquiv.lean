@@ -1133,6 +1133,58 @@ lemma restrictedProductCongrRight_preserves_X
       · simp -- restrictedProductCongrRight φ hφ ((restrictedProductCongrRight φ hφ).symm y) = y
   exact h_preserves_X
 
+open ContinuousMulEquiv in
+@[simp]
+lemma restrictedProductCongrRight_apply_symm_apply
+    -- Context: The types, groups, and homeomorphisms
+    {ι : Type*} {G : ι → Type*} [Π i, Group (G i)] [Π i, TopologicalSpace (G i)]
+    {C : (i : ι) → Subgroup (G i)}
+    (φ : Π i, (G i) ≃ₜ* (G i))
+    (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+
+    -- Argument: An element `y` from the restricted product space
+    (y : Πʳ i, [G i, C i])
+
+    -- Conclusion: The equality statement
+    : ((restrictedProductCongrRight φ hφ)
+      ((restrictedProductCongrRight φ hφ).symm y) = y) := sorry
+
+open ContinuousMulEquiv in
+@[simp]
+lemma restrictedProductCongrRight_symm_apply
+    -- Context: The types, groups, and homeomorphisms
+    {ι : Type*} {G : ι → Type*} [Π i, Group (G i)] [Π i, TopologicalSpace (G i)]
+    {C : (i : ι) → Subgroup (G i)}
+    (φ : Π i, (G i) ≃ₜ* (G i))
+    (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+
+    -- Arguments: An element `y` and a component index `i`
+    (y : Πʳ i, [G i, C i])
+    (i : ι)
+
+    -- Conclusion: The equality statement
+    : ((restrictedProductCongrRight φ hφ).symm y) i = (φ i).symm (y i) := sorry
+
+open ContinuousMulEquiv in
+/--
+The image of a restricted product "box" under a component-wise equivalence
+is the box of the images of the component sets.
+-/
+@[simp]
+lemma piCongrRight_image_box'
+    -- Context: The types, groups, and homeomorphisms
+    {ι : Type*} {G : ι → Type*} [∀ i, Group (G i)] [∀ i, TopologicalSpace (G i)]
+    {C : (i : ι) → Subgroup (G i)}
+    (φ : Π i, G i ≃ₜ* G i)
+    (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+    -- The family of sets defining the box
+    (U : Π i, Set (G i))
+    -- The equality statement
+    : (restrictedProductCongrRight φ hφ) ''
+        (RestrictedProduct.box' (fun i ↦ ↑(C i)) Filter.cofinite U) =
+          RestrictedProduct.box' (fun i ↦ ↑(C i)) Filter.cofinite
+            (fun i ↦ (φ i) '' (U i)) := by sorry
+
 open ContinuousMulEquiv Classical RestrictedProduct in
 /--
 mulEquivHaarChar_restrictedProductCongrRight:
@@ -1289,13 +1341,51 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       Filter.cofinite X_carrier_comp := by
         ext x; simp [X, X_carrier_comp]
 
-    -- Step 2: Verify that the image of X is the box of the component images.
+    -- todo >> ContinuousMulEquiv.piCongrRight_image_box'
     have h_img_is_prod : ψ '' X =
         RestrictedProduct.box' (fun i ↦ (↑(C i) : Set (G i)))
           Filter.cofinite (fun i ↦ (φ i) '' (X_carrier_comp i)) := by
-      -- This proof follows from the definition of `restrictedProductCongrRight`,
-      -- which acts component-wise.
-      sorry -- (Proof is the same as the previous version)
+      -- We prove equality of the two sets by showing they have the same elements.
+      ext y
+      -- Unfold the definitions of image and box to work with their properties.
+      simp only [Set.mem_image, RestrictedProduct.mem_box']
+      constructor
+      -- First, we prove the forward direction (LHS ⟹ RHS).
+      · -- Assume `y` is in the image of `X`. This gives us an `x` in `X` such that `ψ x = y`.
+        rintro ⟨x, hx, rfl⟩
+        -- We need to show that for any component `i`, `(ψ x) i` is in the component image.
+        intro i
+        -- By definition, `(ψ x) i = φ i (x i)`.
+        -- Since `x ∈ X`, we know `x i ∈ X_carrier_comp i` from `hX_is_prod`.
+        rw [hX_is_prod, RestrictedProduct.mem_box'] at hx
+        -- Therefore, `φ i (x i)` is in the image of `X_carrier_comp i`, as required.
+        apply Set.mem_image_of_mem
+        exact hx i
+      -- Second, we prove the backward direction (RHS ⟹ LHS).
+      · -- Assume that for every `i`, `y i` is in the component image `φ i '' X_carrier_comp i`.
+        intro hy
+        -- We must construct an `x ∈ X` such that `ψ x = y`.
+        -- The natural choice is the preimage of `y` under the equivalence `ψ`.
+        use (restrictedProductCongrRight φ hφ).symm y
+        constructor
+        -- Goal 1: Prove this `x` is in `X`.
+        · -- By `hX_is_prod`, we need to show `x i ∈ X_carrier_comp i` for all `i`.
+          rw [hX_is_prod, RestrictedProduct.mem_box']
+          intro i
+          -- Our assumption `hy` gives us a `z` in `X_carrier_comp i` such that `y i = φ i z`.
+          obtain ⟨z, hz, hz_eq⟩ := hy i
+          simp only [restrictedProductCongrRight_symm_apply]
+          -- The `i`-th component of `x` is `(φ i).symm (y i)`.
+          -- We can substitute `y i` using our new hypothesis `hz_eq`.
+          rw [← hz_eq]
+          -- The goal becomes `((...).symm (φ i z)) i ∈ X_carrier_comp i`.
+          -- We can simplify the application of the inverse to the function.
+          simp only [ContinuousMulEquiv.symm_apply_apply]
+          -- The goal is now `z ∈ X_carrier_comp i`, which is exactly our hypothesis `hz`.
+          exact hz
+        -- Goal 2: Prove `ψ x = y`.
+        · -- This is true by construction, as `x` is the preimage of `y`.
+          exact Equiv.apply_symm_apply ψ.toEquiv y
 
     -- Step 3: Verify the local scaling property for each component's Haar measure.
     -- `haarMeasure (G i)` is the Haar measure on the group `G i`.
