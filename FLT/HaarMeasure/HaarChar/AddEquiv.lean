@@ -1450,7 +1450,9 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       letI : Fintype ↑(Function.mulSupport fun i ↦ haar (X_carrier_comp i)) :=
         h_haar_support.fintype
 
-      exact haar_measure_box_eq_finprod C X_carrier_comp h_X_carrier_comp_measurable h_haar_support
+      exact
+        haar_measure_box_eq_finprod
+          C X_carrier_comp h_X_carrier_comp_measurable h_haar_support
 
     -- For the second goal: haar measure support
     have h_haar_support :
