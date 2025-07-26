@@ -3,17 +3,7 @@ import FLT.Mathlib.Topology.Algebra.ContinuousMonoidHom
 import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 import FLT.Mathlib.MeasureTheory.Measure.Regular
 import FLT.Mathlib.MeasureTheory.Group.Measure
---import Mathlib.Algebra.Group.Basic
---import Mathlib.Data.ENNReal.Inv
---import Mathlib.Algebra.Group.Action.Defs
---import Mathlib.Topology.Compactness.Bases
---import Mathlib.Topology.Compactness.Compact
---import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
-
---import Mathlib.Algebra.BigOperators.Finprod
-
---import Mathlib.Data.ENNReal.Basic
---import Mathlib.Topology.Algebra.InfiniteProd
+import Mathlib.Topology.Defs.Induced
 
 open MeasureTheory.Measure
 open scoped NNReal
@@ -1010,6 +1000,41 @@ lemma haarMeasure_univ
     -- The proposition the lemma proves
     : (haar : Measure G) (Set.univ) = 1 := by sorry
 
+open Topology in
+@[simp]
+lemma Subgroup.isOpenEmbedding_subtype
+    -- The parent group with its topology
+    {G : Type*} [Group G] [TopologicalSpace G]
+    -- The subgroup in question
+    (H : Subgroup G)
+    -- The hypothesis that the subgroup is an open set
+    (h_open : IsOpen (H : Set G))
+    -- The conclusion
+    : IsOpenEmbedding (Subtype.val : H → G) := by sorry
+    /- -- An IsOpenEmbedding is a structure with two fields:
+    -- 1. A proof that the function is an `Embedding`.
+    -- 2. A proof that the `range` of the function is an `IsOpen` set.
+    apply IsOpenEmbedding.mk
+    -- Proof for the `Embedding` field:
+    · exact IsEmbedding.subtypeVal
+    -- Proof for the `IsOpen` range field:
+    · rw [Set.range_val]
+      exact h_open -/
+
+@[simp]
+lemma Subgroup.coe_range
+    -- The parent group and the subgroup
+    {G : Type*}
+    [Group G] (H : Subgroup G)
+    -- The conclusion
+    : Set.range (H.subtype : H → G) = H := sorry
+
+@[simp]
+lemma Set.range_val
+    {α : Type*}
+    {p : α → Prop}
+    : Set.range (Subtype.val : {x // p x} → α) = {x | p x} := sorry
+
 /--
 haar_measure_box_eq_finprod:
 the key steps:
@@ -1133,14 +1158,105 @@ lemma restrictedProductCongrRight_preserves_X
       · simp -- restrictedProductCongrRight φ hφ ((restrictedProductCongrRight φ hφ).symm y) = y
   exact h_preserves_X
 
+open ContinuousMulEquiv in
+@[simp]
+lemma restrictedProductCongrRight_apply_symm_apply
+    -- Context: The types, groups, and homeomorphisms
+    {ι : Type*} {G : ι → Type*} [Π i, Group (G i)] [Π i, TopologicalSpace (G i)]
+    {C : (i : ι) → Subgroup (G i)}
+    (φ : Π i, (G i) ≃ₜ* (G i))
+    (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+
+    -- Argument: An element `y` from the restricted product space
+    (y : Πʳ i, [G i, C i])
+
+    -- Conclusion: The equality statement
+    : ((restrictedProductCongrRight φ hφ)
+      ((restrictedProductCongrRight φ hφ).symm y) = y) := sorry
+
+open ContinuousMulEquiv in
+@[simp]
+lemma restrictedProductCongrRight_symm_apply
+    -- Context: The types, groups, and homeomorphisms
+    {ι : Type*} {G : ι → Type*} [Π i, Group (G i)] [Π i, TopologicalSpace (G i)]
+    {C : (i : ι) → Subgroup (G i)}
+    (φ : Π i, (G i) ≃ₜ* (G i))
+    (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+
+    -- Arguments: An element `y` and a component index `i`
+    (y : Πʳ i, [G i, C i])
+    (i : ι)
+
+    -- Conclusion: The equality statement
+    : ((restrictedProductCongrRight φ hφ).symm y) i = (φ i).symm (y i) := sorry
+
+open ContinuousMulEquiv in
+/--
+The image of a restricted product "box" under a component-wise equivalence
+is the box of the images of the component sets.
+-/
+@[simp]
+lemma piCongrRight_image_box'
+    -- Context: The types, groups, and homeomorphisms
+    {ι : Type*} {G : ι → Type*} [∀ i, Group (G i)] [∀ i, TopologicalSpace (G i)]
+    {C : (i : ι) → Subgroup (G i)}
+    (φ : Π i, G i ≃ₜ* G i)
+    (hφ : ∀ᶠ (i : ι) in Filter.cofinite, Set.BijOn ⇑(φ i) ↑(C i) ↑(C i))
+    -- The family of sets defining the box
+    (U : Π i, Set (G i))
+    -- The equality statement
+    : (restrictedProductCongrRight φ hφ) ''
+        (RestrictedProduct.box' (fun i ↦ ↑(C i)) Filter.cofinite U) =
+          RestrictedProduct.box' (fun i ↦ ↑(C i)) Filter.cofinite
+            (fun i ↦ (φ i) '' (U i)) := by sorry
+
+@[simp]
+lemma Set.preimage_eq_of_eq_image
+    -- Universe variables and types
+    {α β : Type*}
+    -- The function and sets
+    {f : α → β} {s : Set β} {t : Set α}
+    -- The hypotheses: injectivity on the source set and the image equality
+    (h_inj : Set.InjOn f t)
+    (h_image : f '' t = s)
+    -- The conclusion
+    : f ⁻¹' s = t := sorry
+
+@[simp]
+lemma measure_ne_zero_of_nonempty_open
+    -- The group and its topological/measurable structure
+    {G : Type*} [TopologicalSpace G] [Group G] [IsTopologicalGroup G] [MeasurableSpace G]
+    -- The measure in question
+    (μ : Measure G) [IsHaarMeasure μ]
+    -- The set in question
+    {s : Set G}
+    -- The hypotheses on the set
+    (hs_open : IsOpen s)
+    (hs_nonempty : s.Nonempty)
+    -- The conclusion
+    : μ s ≠ 0 := sorry
+
+@[simp]
+lemma NNReal.eq_of_coe_eq_one
+    -- The variable, a non-negative real number
+    {r : ℝ≥0}
+    -- The hypothesis: its coercion to ℝ≥0∞ equals 1
+    (h : (r : ℝ≥0∞) = 1)
+    -- The conclusion
+    : r = 1 := sorry
+
+--set_option maxHeartbeats 0
 open ContinuousMulEquiv Classical RestrictedProduct in
 /--
 mulEquivHaarChar_restrictedProductCongrRight:
-key steps:
-* Identify the finite set S where φ doesn't preserve C
-* Construct the compact open subset X
-* Show the automorphism scales X by the product of individual characters
-* Handle the support finiteness conditions for the finitary product -/
+
+Proof Strategy (the high-level strategy is to):
+
+* Define a special compact open subset X of the restricted product space.
+* Reduce the main goal to proving how the equivalence ψ scales the Haar measure of this set X.
+* Calculate the measure of the scaled set, haar (ψ '' X), in two different ways.
+* Equate the two resulting expressions and cancel the haar X term
+  (which is shown to be non-zero and finite) to get the final result. -/
 --@[to_additive, simp]
 @[simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight
@@ -1213,7 +1329,21 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
         exact h_map_identity
 
     -- From this, we get: `map ψ haar = c⁻¹ • haar`
-    have h_map_inv : Measure.map (⇑ψ) haar = c_ennreal⁻¹ • haar := by sorry
+    have h_map_inv : Measure.map (⇑ψ) haar = c_ennreal⁻¹ • haar := by
+      -- Start with the goal, and on the right-hand side, substitute `haar`
+      rw [← h_ennreal] -- which uses the correct ℝ≥0∞ scalar
+      -- The goal is now `map ψ haar = c_ennreal⁻¹ • (c_ennreal • map ψ haar)`.
+
+      -- Use the associativity of scalar multiplication on measures (`a • (b • μ) = (a * b) • μ`).
+      rw [← mul_smul]
+
+      -- Since `c_ennreal` is known to be non-zero and finite, `c⁻¹ * c = 1`.
+      rw [ENNReal.inv_mul_cancel hc_ne_zero hc_ne_top]
+
+      -- The goal becomes `map ψ haar = 1 • map ψ haar`, which is true by definition.
+      rw [one_smul]
+
+      rw [h_ennreal]
 
     -- Apply both sides to `ψ '' X`
     have h_on_image : (Measure.map (⇑ψ) haar) (ψ '' X) = (c_ennreal⁻¹ • haar) (ψ '' X) := by
@@ -1221,25 +1351,20 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
 
     -- Simplify the LHS using the fact that map pulls back the preimage
     have h_lhs : (Measure.map (⇑ψ) haar) (ψ '' X) = haar X := by
-      -- The lemma `Measure.map_apply` requires the set `ψ '' X` to be measurable.
-      -- We prove this first.
+      -- 1. Explicitly state the exact rewrite rule we need to prove.
+      --    By giving the full type, we help Lean infer all the arguments for `map_apply`.
       have h_image_measurable : MeasurableSet (ψ '' X) := by
-        -- `ψ` is a measurable equivalence and `X` is an open (so measurable) set.
-        -- The image of a measurable set under a measurable equivalence is measurable.
         apply (ψ.toMeasurableEquiv.measurableEmbedding.measurableSet_image).mpr
         exact IsOpen.measurableSet hXopen
 
-      -- Apply the definition of the pushforward measure.
-      rw [Measure.map_apply]
+      have h_spec : (Measure.map ⇑ψ haar) (ψ '' X) = haar (⇑ψ ⁻¹' (ψ '' X)) :=
+        Measure.map_apply ψ.continuous.measurable h_image_measurable
 
-      -- Goal 1: ?
-      · sorry--exact ψ.continuous.measurable
+      -- 2. Now, rewrite using this specific, proven hypothesis.
+      rw [h_spec]
 
-      -- Goal 2: ?
-      · sorry--exact h_image_measurable
-
-      -- For an injective function, the preimage of the image is the original set.
-      exact h_image_measurable
+      -- 3. The rest of the proof is unchanged.
+      rw [Set.preimage_image_eq _ ψ.injective]
 
     -- Simplify the RHS using the definition of scalar multiplication
     have h_rhs : (c_ennreal⁻¹ • haar) (ψ '' X) = c_ennreal⁻¹ * haar (ψ '' X) := by
@@ -1280,18 +1405,134 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       Filter.cofinite X_carrier_comp := by
         ext x; simp [X, X_carrier_comp]
 
-    -- Step 2: Verify that the image of X is the box of the component images.
+    -- todo >> ContinuousMulEquiv.piCongrRight_image_box'
     have h_img_is_prod : ψ '' X =
         RestrictedProduct.box' (fun i ↦ (↑(C i) : Set (G i)))
           Filter.cofinite (fun i ↦ (φ i) '' (X_carrier_comp i)) := by
-      -- This proof follows from the definition of `restrictedProductCongrRight`,
-      -- which acts component-wise.
-      sorry -- (Proof is the same as the previous version)
+      -- We prove equality of the two sets by showing they have the same elements.
+      ext y
+      -- Unfold the definitions of image and box to work with their properties.
+      simp only [Set.mem_image, RestrictedProduct.mem_box']
+      constructor
+      -- First, we prove the forward direction (LHS ⟹ RHS).
+      · -- Assume `y` is in the image of `X`. This gives us an `x` in `X` such that `ψ x = y`.
+        rintro ⟨x, hx, rfl⟩
+        -- We need to show that for any component `i`, `(ψ x) i` is in the component image.
+        intro i
+        -- By definition, `(ψ x) i = φ i (x i)`.
+        -- Since `x ∈ X`, we know `x i ∈ X_carrier_comp i` from `hX_is_prod`.
+        rw [hX_is_prod, RestrictedProduct.mem_box'] at hx
+        -- Therefore, `φ i (x i)` is in the image of `X_carrier_comp i`, as required.
+        apply Set.mem_image_of_mem
+        exact hx i
+      -- Second, we prove the backward direction (RHS ⟹ LHS).
+      · -- Assume that for every `i`, `y i` is in the component image `φ i '' X_carrier_comp i`.
+        intro hy
+        -- We must construct an `x ∈ X` such that `ψ x = y`.
+        -- The natural choice is the preimage of `y` under the equivalence `ψ`.
+        use (restrictedProductCongrRight φ hφ).symm y
+        constructor
+        -- Goal 1: Prove this `x` is in `X`.
+        · -- By `hX_is_prod`, we need to show `x i ∈ X_carrier_comp i` for all `i`.
+          rw [hX_is_prod, RestrictedProduct.mem_box']
+          intro i
+          -- Our assumption `hy` gives us a `z` in `X_carrier_comp i` such that `y i = φ i z`.
+          obtain ⟨z, hz, hz_eq⟩ := hy i
+          simp only [restrictedProductCongrRight_symm_apply]
+          -- The `i`-th component of `x` is `(φ i).symm (y i)`.
+          -- We can substitute `y i` using our new hypothesis `hz_eq`.
+          rw [← hz_eq]
+          -- The goal becomes `((...).symm (φ i z)) i ∈ X_carrier_comp i`.
+          -- We can simplify the application of the inverse to the function.
+          simp only [ContinuousMulEquiv.symm_apply_apply]
+          -- The goal is now `z ∈ X_carrier_comp i`, which is exactly our hypothesis `hz`.
+          exact hz
+        -- Goal 2: Prove `ψ x = y`.
+        · -- This is true by construction, as `x` is the preimage of `y`.
+          exact Equiv.apply_symm_apply ψ.toEquiv y
 
     -- Step 3: Verify the local scaling property for each component's Haar measure.
     -- `haarMeasure (G i)` is the Haar measure on the group `G i`.
     have h_local_scale : ∀ i, haar ((φ i) '' (X_carrier_comp i)) =
-      (mulEquivHaarChar (φ i) : ℝ≥0∞) * haar (X_carrier_comp i) := by sorry
+          (mulEquivHaarChar (φ i) : ℝ≥0∞) * haar (X_carrier_comp i) := by
+        intro i
+        -- We split the proof into two cases based on whether `i` is in `S`.
+        by_cases h_in_S : i ∈ S
+        · -- Case 1: i ∈ S [cite: 162]
+          -- The component space is the entire group `G i`. [cite: 190]
+          have h_comp_univ : X_carrier_comp i = Set.univ := by simp [X_carrier_comp, h_in_S]
+          -- Since `G i` is a compact space, its Haar measure is 1. [cite: 135, 161]
+          have h_haar_univ : haar (Set.univ : Set (G i)) = 1 := haarMeasure_univ
+          -- The character of any equivalence on a compact space is 1. [cite: 17]
+          have h_char_one : mulEquivHaarChar (φ i) = 1 :=
+            mulEquivHaarChar_eq_one_of_compactSpace (φ i)
+          -- The image of the entire space under an equivalence is the space itself.
+          have h_img_univ : (φ i) '' Set.univ = Set.univ :=
+            Set.image_univ_of_surjective (φ i).surjective
+          -- Substituting these facts proves the goal for this case.
+          rw [h_comp_univ, h_img_univ, h_haar_univ, h_char_one]
+          simp
+        · -- Case 2: i ∉ S [cite: 162]
+          -- The component space is the compact open subgroup `C i`. [cite: 190, 54]
+          have h_comp_C : X_carrier_comp i = ↑(C i) := by simp [X_carrier_comp, h_in_S]
+          -- The condition `i ∉ S` implies `φ i` maps `C i` bijectively to itself. [cite: 162]
+          have h_bij : Set.BijOn (φ i) (C i) (C i) := by
+            rw [Set.mem_setOf_eq, not_not] at h_in_S; exact h_in_S
+          -- Therefore, the image of `C i` under `φ i` is `C i` itself.
+          have h_img_C : (φ i) '' ↑(C i) = ↑(C i) := h_bij.image_eq
+          -- Define the proof that the specific `C i` is open by applying the general hypothesis.
+          have h_C_open : IsOpen (↑(C i) : Set (G i)) := hCopen.out i
+          -- We can also show that the character of `φ i` must be 1.
+          -- The character scales the measure, but since `φ i` preserves the measure
+          -- of the set `C i` (which is non-zero and finite), the scaling factor must be 1.
+          have h_char_one : mulEquivHaarChar (φ i) = 1 := by
+            -- Since φ i maps C i bijectively to itself,
+            -- we can restrict it to an automorphism of C i
+            let φ_restricted : C i ≃ₜ* C i := {
+              toFun := fun x => ⟨φ i x, h_bij.mapsTo x.property⟩
+              invFun := fun x => ⟨(φ i).symm x, by
+                have : ∀ y ∈ C i, (φ i).symm y ∈ C i := by
+                  intro y hy
+                  obtain ⟨z, hz, rfl⟩ := h_bij.surjOn hy
+                  convert hz
+                  simp
+                exact this x x.property⟩
+              left_inv := fun x => by ext; simp
+              right_inv := fun x => by ext; simp
+              map_mul' := fun x y => by ext; exact (φ i).map_mul x y
+              continuous_toFun := (φ i).continuous.comp continuous_subtype_val |>.subtype_mk _
+              continuous_invFun :=
+                (φ i).continuous_invFun.comp continuous_subtype_val |>.subtype_mk ?_
+            }
+
+            -- The character on the compact space C i is 1
+            have h_restricted : mulEquivHaarChar φ_restricted = 1 :=
+              mulEquivHaarChar_eq_one_of_compactSpace φ_restricted
+
+            -- The character of φ i equals the character of its restriction
+            have h_embedding : Topology.IsOpenEmbedding (C i).subtype :=
+              Subgroup.isOpenEmbedding_subtype (C i) h_C_open
+
+            rw [← h_restricted]
+            symm
+            apply
+              mulEquivHaarChar_eq_mulEquivHaarChar_of_isOpenEmbedding
+                h_embedding φ_restricted (φ i)
+
+            intro x
+            rfl
+
+            intro x
+            have : (φ i).symm x.val ∈ C i := by
+              obtain ⟨y, hy, heq⟩ := h_bij.surjOn x.property
+              convert hy
+              rw [← heq]
+              exact (φ i).symm_apply_apply y
+            exact this
+
+          -- Substituting these facts proves the goal for this case.
+          rw [h_comp_C, h_img_C, h_char_one]
+          simp
 
     -- Step 4: Assume the theorem that the Haar measure of a box is the finitary product
     -- of the component measures.
@@ -1307,7 +1548,59 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
         -- BorelSpace, it is measurable.
         exact IsOpen.measurableSet (hCopen.out i)
 
-    have h_support : (Function.mulSupport fun i ↦ haar (X_carrier_comp i)) := sorry
+    have h_haar_support :
+      (Function.mulSupport fun i ↦ haar (X_carrier_comp i)).Finite := by
+      -- 1. State the foundational property that the set of indices where the measure
+      --    of the compact open subgroup `C i` is not 1, is finite.
+      let F := {i : ι | (haar : Measure (G i)) ↑(C i) ≠ 1}
+      have hF_finite : F.Finite :=
+        haar_prod_support_finite
+          C hCopen.out hCcompact
+
+      -- 2. Prove that our support is a subset of this known finite set.
+      have h_subset :
+        Function.mulSupport (fun i ↦ haar (X_carrier_comp i)) ⊆ F := by
+        -- To prove the subset relation, we show that any element `i` in the support
+        -- must also be an element of `{j | haar (C j) ≠ 1}`.
+        intro i h_in_support
+        simp only [Function.mulSupport, Set.mem_setOf_eq] at h_in_support
+
+        -- Analyze the cases based on whether `i` is in the finite set `S`.
+        by_cases h_in_S : i ∈ S
+        · -- Case 1: `i ∈ S`.
+          -- This case leads to a contradiction, meaning no `i` from `S`
+          -- can be in the support.
+          -- From a contradiction, we can prove any goal.
+          exfalso
+
+          -- Prove the contradiction:
+          have h_comp_is_univ : X_carrier_comp i = Set.univ := by
+            simp [X_carrier_comp, h_in_S]
+
+          have h_measure_is_one : (haar : Measure (G i)) (Set.univ) = 1 := by
+            -- This follows from `haarMeasure_self` for compact spaces.
+            -- The canonical Haar measure of a compact space is 1.
+            -- Lean finds the necessary instances `[IsHaarMeasure haar]`
+            -- and `[CompactSpace (G i)]` automatically.
+            exact haarMeasure_univ
+
+          rw [h_comp_is_univ, h_measure_is_one] at h_in_support
+          exact h_in_support rfl
+
+        · -- Case 2: `i ∉ S`.
+          -- In this case, `X_carrier_comp i` is the subgroup `C i`.
+          have h_comp_is_C : X_carrier_comp i = ↑(C i) := by
+            simp [X_carrier_comp, h_in_S]
+
+          -- The hypothesis `h_in_support` is `haar (X_carrier_comp i) ≠ 1`.
+          -- Substituting `C i` gives `haar (↑(C i)) ≠ 1`.
+          rw [h_comp_is_C] at h_in_support
+
+          -- This is exactly the condition for membership in the superset `F`.
+          exact h_in_support
+
+      -- 3. Since our support is a subset of a finite set, it must also be finite.
+      exact Set.Finite.subset hF_finite h_subset
 
     have haar_box_is_finprod
       (U : Π i, Set (G i))
@@ -1329,35 +1622,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
         letI : Fintype ↑(Function.mulSupport fun i ↦ haar (U i)) := h_support.fintype
         exact haar_measure_box_eq_finprod C U hU_measurable h_support
 
-    -- Now, we construct the final proof by rewriting with our verified hypotheses.
-
-    -- First, establish the measure of the LHS `haar (ψ '' X)`.
-    have h_lhs_measure :
-        haar (ψ '' X) = ∏ᶠ i, (mulEquivHaarChar (φ i) : ℝ≥0∞) *
-          haar (X_carrier_comp i) := by sorry
-      /- -- Rewrite the image and apply the product formula.
-      rw [h_img_is_prod, haar_box_is_finprod]
-
-      -- Goal 1: Prove the equality of the finitary products.
-      · apply finprod_congr
-        exact h_local_scale
-
-      -- Goal 2: Prove the sets `(φ i '' X_carrier_comp i)` are measurable.
-      · intro i
-        -- This follows from `φ i` being a measurable equivalence and our proof above.
-        exact (φ i).toMeasurableEquiv.measurableEmbedding.measurableSet_image
-          (h_X_carrier_comp_measurable i) -/
-
-    -- Next, establish the measure of the RHS `haar X`.
-    have h_rhs_measure : haar X = ∏ᶠ i, haar (X_carrier_comp i) := by sorry
-      -- Rewrite X and apply the product formula.
-      /- rw [hX_is_prod, haar_box_is_finprod]
-
-      -- The rewrite created a goal to prove the sets `X_carrier_comp i` are measurable.
-      -- We solve it using our reusable proof.
-      exact h_X_carrier_comp_measurable -/
-
-    -- For the first goal: Prove finite support for mulEquivHaarChar
+    -- Prove finite support for mulEquivHaarChar
     have h_char_support :
       (Function.mulSupport fun i ↦ ↑(mulEquivHaarChar (φ i) : ℝ≥0∞)).Finite := by
       simp only [Function.mulSupport, ENNReal.coe_ne_one]
@@ -1370,6 +1635,65 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
           apply mulEquivHaarChar_eq_one_of_compactSpace
         simp [this]
       exact hS_finite.subset h_subset
+
+    -- Now, we construct the final proof by rewriting with our verified hypotheses.
+
+    -- First, establish the measure of the LHS `haar (ψ '' X)`.
+    have h_lhs_measure :
+        haar (ψ '' X) = ∏ᶠ i, (mulEquivHaarChar (φ i) : ℝ≥0∞) *
+          haar (X_carrier_comp i) := by
+      -- Rewrite the image of X as a box product using h_img_is_prod
+      rw [h_img_is_prod]
+
+      -- Show that the support for the measure of the image sets is finite.
+      -- This is required to use the product formula `haar_measure_box_eq_finprod`.
+      have h_support_image :
+        (Function.mulSupport fun i ↦ haar ((φ i) '' (X_carrier_comp i))).Finite := by
+        -- The support of the scaled measure is a subset of the union of the individual supports.
+        suffices (Function.mulSupport fun i ↦ haar (φ i '' X_carrier_comp i)) ⊆
+          (Function.mulSupport fun i ↦ (mulEquivHaarChar (φ i) : ℝ≥0∞)) ∪
+          (Function.mulSupport fun i ↦ haar (X_carrier_comp i)) from
+          (h_char_support.union h_haar_support).subset this
+        intro i hi
+        -- We use the local scaling property to relate the measure of the
+        -- image to the original measure.
+        specialize h_local_scale i
+        simp only [Function.mulSupport, Set.mem_setOf_eq, Set.mem_union] at *
+        rw [h_local_scale] at hi
+        contrapose! hi
+        rw [hi.1, hi.2, one_mul]
+
+      have h_image_measurable : ∀ i, MeasurableSet ((φ i) '' (X_carrier_comp i)) := fun i ↦
+        (φ i).toMeasurableEquiv.measurableEmbedding.measurableSet_image.mpr
+          (h_X_carrier_comp_measurable i)
+
+      letI : Fintype ↑(Function.mulSupport fun i ↦ haar (⇑(φ i) '' X_carrier_comp i)) :=
+        h_support_image.fintype
+
+      -- Apply the theorem that the Haar measure of a box
+      -- is the finitary product of component measures.
+      rw [haar_measure_box_eq_finprod
+        C (fun i ↦ (φ i) '' (X_carrier_comp i)) h_image_measurable h_support_image]
+
+      -- The goal is now an equality of two finitary products. We prove it by showing
+      -- the terms are equal for each index `i`.
+      apply finprod_congr
+      intro i
+      -- This local equality is exactly the `h_local_scale` lemma.
+      exact h_local_scale i
+
+    -- Next, establish the measure of the RHS `haar X`.
+    have h_rhs_measure : haar X = ∏ᶠ i, haar (X_carrier_comp i) := by
+      -- First, rewrite X as a box product using the hypothesis `hX_is_prod`
+      rw [hX_is_prod]
+
+      -- The `haar_measure_box_eq_finprod` lemma requires a `Fintype` instance
+      letI : Fintype ↑(Function.mulSupport fun i ↦ haar (X_carrier_comp i)) :=
+        h_haar_support.fintype
+
+      exact
+        haar_measure_box_eq_finprod
+          C X_carrier_comp h_X_carrier_comp_measurable h_haar_support
 
     -- For the second goal: haar measure support
     have h_haar_support :
