@@ -1521,8 +1521,8 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
               mulEquivHaarChar_eq_one_of_compactSpace φ_restricted
 
             -- The character of φ i equals the character of its restriction
-            have h_embedding : Topology.IsOpenEmbedding (C i).subtype := by
-              sorry
+            have h_embedding : Topology.IsOpenEmbedding (C i).subtype :=
+              Subgroup.isOpenEmbedding_subtype (C i) h_C_open
 
             rw [← h_restricted]
             symm
