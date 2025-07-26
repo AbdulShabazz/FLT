@@ -1442,13 +1442,15 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
       exact h_local_scale i
 
     -- Next, establish the measure of the RHS `haar X`.
-    have h_rhs_measure : haar X = ∏ᶠ i, haar (X_carrier_comp i) := by sorry
-      -- Rewrite X and apply the product formula.
-      /- rw [hX_is_prod, haar_box_is_finprod]
+    have h_rhs_measure : haar X = ∏ᶠ i, haar (X_carrier_comp i) := by
+      -- First, rewrite X as a box product using the hypothesis `hX_is_prod`
+      rw [hX_is_prod]
 
-      -- The rewrite created a goal to prove the sets `X_carrier_comp i` are measurable.
-      -- We solve it using our reusable proof.
-      exact h_X_carrier_comp_measurable -/
+      -- The `haar_measure_box_eq_finprod` lemma requires a `Fintype` instance
+      letI : Fintype ↑(Function.mulSupport fun i ↦ haar (X_carrier_comp i)) :=
+        h_haar_support.fintype
+
+      exact haar_measure_box_eq_finprod C X_carrier_comp h_X_carrier_comp_measurable h_haar_support
 
     -- For the second goal: haar measure support
     have h_haar_support :
