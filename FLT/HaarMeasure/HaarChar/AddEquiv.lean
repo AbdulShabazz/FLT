@@ -1185,14 +1185,53 @@ lemma piCongrRight_image_box'
           RestrictedProduct.box' (fun i ↦ ↑(C i)) Filter.cofinite
             (fun i ↦ (φ i) '' (U i)) := by sorry
 
+@[simp]
+lemma Set.preimage_eq_of_eq_image
+    -- Universe variables and types
+    {α β : Type*}
+    -- The function and sets
+    {f : α → β} {s : Set β} {t : Set α}
+    -- The hypotheses: injectivity on the source set and the image equality
+    (h_inj : Set.InjOn f t)
+    (h_image : f '' t = s)
+    -- The conclusion
+    : f ⁻¹' s = t := sorry
+
+@[simp]
+lemma measure_ne_zero_of_nonempty_open
+    -- The group and its topological/measurable structure
+    {G : Type*} [TopologicalSpace G] [Group G] [IsTopologicalGroup G] [MeasurableSpace G]
+    -- The measure in question
+    (μ : Measure G) [IsHaarMeasure μ]
+    -- The set in question
+    {s : Set G}
+    -- The hypotheses on the set
+    (hs_open : IsOpen s)
+    (hs_nonempty : s.Nonempty)
+    -- The conclusion
+    : μ s ≠ 0 := sorry
+
+@[simp]
+lemma NNReal.eq_of_coe_eq_one
+    -- The variable, a non-negative real number
+    {r : ℝ≥0}
+    -- The hypothesis: its coercion to ℝ≥0∞ equals 1
+    (h : (r : ℝ≥0∞) = 1)
+    -- The conclusion
+    : r = 1 := sorry
+
+--set_option maxHeartbeats 0
 open ContinuousMulEquiv Classical RestrictedProduct in
 /--
 mulEquivHaarChar_restrictedProductCongrRight:
-key steps:
-* Identify the finite set S where φ doesn't preserve C
-* Construct the compact open subset X
-* Show the automorphism scales X by the product of individual characters
-* Handle the support finiteness conditions for the finitary product -/
+
+Proof Strategy (the high-level strategy is to):
+
+* Define a special compact open subset X of the restricted product space.
+* Reduce the main goal to proving how the equivalence ψ scales the Haar measure of this set X.
+* Calculate the measure of the scaled set, haar (ψ '' X), in two different ways.
+* Equate the two resulting expressions and cancel the haar X term
+  (which is shown to be non-zero and finite) to get the final result. -/
 --@[to_additive, simp]
 @[simp]
 lemma mulEquivHaarChar_restrictedProductCongrRight
@@ -1390,7 +1429,67 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
     -- Step 3: Verify the local scaling property for each component's Haar measure.
     -- `haarMeasure (G i)` is the Haar measure on the group `G i`.
     have h_local_scale : ∀ i, haar ((φ i) '' (X_carrier_comp i)) =
-      (mulEquivHaarChar (φ i) : ℝ≥0∞) * haar (X_carrier_comp i) := by sorry
+          (mulEquivHaarChar (φ i) : ℝ≥0∞) * haar (X_carrier_comp i) := by
+        intro i
+        -- We split the proof into two cases based on whether `i` is in `S`.
+        by_cases h_in_S : i ∈ S
+        · -- Case 1: i ∈ S [cite: 162]
+          -- The component space is the entire group `G i`. [cite: 190]
+          have h_comp_univ : X_carrier_comp i = Set.univ := by simp [X_carrier_comp, h_in_S]
+          -- Since `G i` is a compact space, its Haar measure is 1. [cite: 135, 161]
+          have h_haar_univ : haar (Set.univ : Set (G i)) = 1 := haarMeasure_univ
+          -- The character of any equivalence on a compact space is 1. [cite: 17]
+          have h_char_one : mulEquivHaarChar (φ i) = 1 :=
+            mulEquivHaarChar_eq_one_of_compactSpace (φ i)
+          -- The image of the entire space under an equivalence is the space itself.
+          have h_img_univ : (φ i) '' Set.univ = Set.univ :=
+            Set.image_univ_of_surjective (φ i).surjective
+          -- Substituting these facts proves the goal for this case.
+          rw [h_comp_univ, h_img_univ, h_haar_univ, h_char_one]
+          simp
+        · -- Case 2: i ∉ S [cite: 162]
+          -- The component space is the compact open subgroup `C i`. [cite: 190, 54]
+          have h_comp_C : X_carrier_comp i = ↑(C i) := by simp [X_carrier_comp, h_in_S]
+          -- The condition `i ∉ S` implies `φ i` maps `C i` bijectively to itself. [cite: 162]
+          have h_bij : Set.BijOn (φ i) (C i) (C i) := by
+            rw [Set.mem_setOf_eq, not_not] at h_in_S; exact h_in_S
+          -- Therefore, the image of `C i` under `φ i` is `C i` itself.
+          have h_img_C : (φ i) '' ↑(C i) = ↑(C i) := h_bij.image_eq
+          -- Define the proof that the specific `C i` is open by applying the general hypothesis.
+          have h_C_open : IsOpen (↑(C i) : Set (G i)) := hCopen.out i
+          -- We can also show that the character of `φ i` must be 1.
+          -- The character scales the measure, but since `φ i` preserves the measure
+          -- of the set `C i` (which is non-zero and finite), the scaling factor must be 1.
+          have h_char_one : mulEquivHaarChar (φ i) = 1 := by sorry
+            /- let μ_i : Measure (G i) := haar
+            have h_C_open : IsOpen (↑(C i) : Set (G i)) := hCopen.out i
+            have h_map_C_eq :
+              (mulEquivHaarChar (φ i) • Measure.map
+                (⇑(φ i)) μ_i) ↑(C i) = μ_i ↑(C i) :=
+                  mulEquivHaarChar_map_open μ_i (φ i) h_C_open
+
+            -- Rewrite the equality to have the form `c * m = m`
+            rw [Measure.smul_apply, map_apply (φ i).continuous.measurable h_C_open.measurableSet,
+              Set.preimage_eq_of_eq_image h_bij.injOn h_bij.image_eq] at h_map_C_eq
+
+            -- First, prove that the character coerced to ℝ≥0∞ is 1.
+            have h_ennreal_eq_one : ↑(mulEquivHaarChar (φ i)) = 1 := by
+              -- Rewrite the RHS of our hypothesis to `1 * m` to match the cancellation lemma.
+              rw [← one_mul (μ_i ↑(C i))] at h_map_C_eq
+              -- Apply the cancellation lemma directly to the hypothesis.
+              apply (ENNReal.mul_right_inj _ _).mp h_map_C_eq
+              -- Prove that the measure is not zero.
+              · exact measure_ne_zero_of_nonempty_open μ_i h_C_open
+                  (Set.nonempty_of_mem (Subgroup.one_mem _))
+              -- Prove that the measure is not infinity.
+              · exact (IsCompact.measure_lt_top (isCompact_iff_compactSpace.mpr (hCcompact i))).ne
+
+            -- Finally, convert the proof from ℝ≥0∞ back to ℝ≥0 to solve the main goal.
+            exact NNReal.coe_inj h_ennreal_eq_one -/
+
+          -- Substituting these facts proves the goal for this case.
+          rw [h_comp_C, h_img_C, h_char_one]
+          simp
 
     -- Step 4: Assume the theorem that the Haar measure of a box is the finitary product
     -- of the component measures.
