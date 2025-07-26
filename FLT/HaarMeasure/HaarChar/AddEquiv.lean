@@ -1235,25 +1235,20 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
 
     -- Simplify the LHS using the fact that map pulls back the preimage
     have h_lhs : (Measure.map (⇑ψ) haar) (ψ '' X) = haar X := by
-      -- The lemma `Measure.map_apply` requires the set `ψ '' X` to be measurable.
-      -- We prove this first.
+      -- 1. Explicitly state the exact rewrite rule we need to prove.
+      --    By giving the full type, we help Lean infer all the arguments for `map_apply`.
       have h_image_measurable : MeasurableSet (ψ '' X) := by
-        -- `ψ` is a measurable equivalence and `X` is an open (so measurable) set.
-        -- The image of a measurable set under a measurable equivalence is measurable.
         apply (ψ.toMeasurableEquiv.measurableEmbedding.measurableSet_image).mpr
         exact IsOpen.measurableSet hXopen
 
-      -- Apply the definition of the pushforward measure.
-      rw [Measure.map_apply]
+      have h_spec : (Measure.map ⇑ψ haar) (ψ '' X) = haar (⇑ψ ⁻¹' (ψ '' X)) :=
+        Measure.map_apply ψ.continuous.measurable h_image_measurable
 
-      -- Goal 1: ?
-      · sorry--exact ψ.continuous.measurable
+      -- 2. Now, rewrite using this specific, proven hypothesis.
+      rw [h_spec]
 
-      -- Goal 2: ?
-      · sorry--exact h_image_measurable
-
-      -- For an injective function, the preimage of the image is the original set.
-      exact h_image_measurable
+      -- 3. The rest of the proof is unchanged.
+      rw [Set.preimage_image_eq _ ψ.injective]
 
     -- Simplify the RHS using the definition of scalar multiplication
     have h_rhs : (c_ennreal⁻¹ • haar) (ψ '' X) = c_ennreal⁻¹ * haar (ψ '' X) := by
