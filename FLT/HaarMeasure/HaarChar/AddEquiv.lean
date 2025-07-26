@@ -3,6 +3,7 @@ import FLT.Mathlib.Topology.Algebra.ContinuousMonoidHom
 import FLT.Mathlib.Topology.Algebra.RestrictedProduct.TopologicalSpace
 import FLT.Mathlib.MeasureTheory.Measure.Regular
 import FLT.Mathlib.MeasureTheory.Group.Measure
+import Mathlib.Topology.Defs.Induced
 --import Mathlib.Algebra.Group.Basic
 --import Mathlib.Data.ENNReal.Inv
 --import Mathlib.Algebra.Group.Action.Defs
@@ -1010,6 +1011,41 @@ lemma haarMeasure_univ
     -- The proposition the lemma proves
     : (haar : Measure G) (Set.univ) = 1 := by sorry
 
+open Topology in
+@[simp]
+lemma Subgroup.isOpenEmbedding_subtype
+    -- The parent group with its topology
+    {G : Type*} [Group G] [TopologicalSpace G]
+    -- The subgroup in question
+    (H : Subgroup G)
+    -- The hypothesis that the subgroup is an open set
+    (h_open : IsOpen (H : Set G))
+    -- The conclusion
+    : IsOpenEmbedding (Subtype.val : H → G) := by sorry
+    /- -- An IsOpenEmbedding is a structure with two fields:
+    -- 1. A proof that the function is an `Embedding`.
+    -- 2. A proof that the `range` of the function is an `IsOpen` set.
+    apply IsOpenEmbedding.mk
+    -- Proof for the `Embedding` field:
+    · exact IsEmbedding.subtypeVal
+    -- Proof for the `IsOpen` range field:
+    · rw [Set.range_val]
+      exact h_open -/
+
+@[simp]
+lemma Subgroup.coe_range
+    -- The parent group and the subgroup
+    {G : Type*}
+    [Group G] (H : Subgroup G)
+    -- The conclusion
+    : Set.range (H.subtype : H → G) = H := sorry
+
+@[simp]
+lemma Set.range_val
+    {α : Type*}
+    {p : α → Prop}
+    : Set.range (Subtype.val : {x // p x} → α) = {x | p x} := sorry
+
 /--
 haar_measure_box_eq_finprod:
 the key steps:
@@ -1460,32 +1496,50 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
           -- We can also show that the character of `φ i` must be 1.
           -- The character scales the measure, but since `φ i` preserves the measure
           -- of the set `C i` (which is non-zero and finite), the scaling factor must be 1.
-          have h_char_one : mulEquivHaarChar (φ i) = 1 := by sorry
-            /- let μ_i : Measure (G i) := haar
-            have h_C_open : IsOpen (↑(C i) : Set (G i)) := hCopen.out i
-            have h_map_C_eq :
-              (mulEquivHaarChar (φ i) • Measure.map
-                (⇑(φ i)) μ_i) ↑(C i) = μ_i ↑(C i) :=
-                  mulEquivHaarChar_map_open μ_i (φ i) h_C_open
+          have h_char_one : mulEquivHaarChar (φ i) = 1 := by
+            -- Since φ i maps C i bijectively to itself,
+            -- we can restrict it to an automorphism of C i
+            let φ_restricted : C i ≃ₜ* C i := {
+              toFun := fun x => ⟨φ i x, h_bij.mapsTo x.property⟩
+              invFun := fun x => ⟨(φ i).symm x, by
+                have : ∀ y ∈ C i, (φ i).symm y ∈ C i := by
+                  intro y hy
+                  obtain ⟨z, hz, rfl⟩ := h_bij.surjOn hy
+                  convert hz
+                  simp
+                exact this x x.property⟩
+              left_inv := fun x => by ext; simp
+              right_inv := fun x => by ext; simp
+              map_mul' := fun x y => by ext; exact (φ i).map_mul x y
+              continuous_toFun := (φ i).continuous.comp continuous_subtype_val |>.subtype_mk _
+              continuous_invFun :=
+                (φ i).continuous_invFun.comp continuous_subtype_val |>.subtype_mk ?_
+            }
 
-            -- Rewrite the equality to have the form `c * m = m`
-            rw [Measure.smul_apply, map_apply (φ i).continuous.measurable h_C_open.measurableSet,
-              Set.preimage_eq_of_eq_image h_bij.injOn h_bij.image_eq] at h_map_C_eq
+            -- The character on the compact space C i is 1
+            have h_restricted : mulEquivHaarChar φ_restricted = 1 :=
+              mulEquivHaarChar_eq_one_of_compactSpace φ_restricted
 
-            -- First, prove that the character coerced to ℝ≥0∞ is 1.
-            have h_ennreal_eq_one : ↑(mulEquivHaarChar (φ i)) = 1 := by
-              -- Rewrite the RHS of our hypothesis to `1 * m` to match the cancellation lemma.
-              rw [← one_mul (μ_i ↑(C i))] at h_map_C_eq
-              -- Apply the cancellation lemma directly to the hypothesis.
-              apply (ENNReal.mul_right_inj _ _).mp h_map_C_eq
-              -- Prove that the measure is not zero.
-              · exact measure_ne_zero_of_nonempty_open μ_i h_C_open
-                  (Set.nonempty_of_mem (Subgroup.one_mem _))
-              -- Prove that the measure is not infinity.
-              · exact (IsCompact.measure_lt_top (isCompact_iff_compactSpace.mpr (hCcompact i))).ne
+            -- The character of φ i equals the character of its restriction
+            have h_embedding : Topology.IsOpenEmbedding (C i).subtype := by
+              sorry
 
-            -- Finally, convert the proof from ℝ≥0∞ back to ℝ≥0 to solve the main goal.
-            exact NNReal.coe_inj h_ennreal_eq_one -/
+            rw [← h_restricted]
+            symm
+            apply
+              mulEquivHaarChar_eq_mulEquivHaarChar_of_isOpenEmbedding
+                h_embedding φ_restricted (φ i)
+
+            intro x
+            rfl
+
+            intro x
+            have : (φ i).symm x.val ∈ C i := by
+              obtain ⟨y, hy, heq⟩ := h_bij.surjOn x.property
+              convert hy
+              rw [← heq]
+              exact (φ i).symm_apply_apply y
+            exact this
 
           -- Substituting these facts proves the goal for this case.
           rw [h_comp_C, h_img_C, h_char_one]
