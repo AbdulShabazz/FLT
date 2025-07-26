@@ -1307,7 +1307,59 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
         -- BorelSpace, it is measurable.
         exact IsOpen.measurableSet (hCopen.out i)
 
-    have h_support : (Function.mulSupport fun i ↦ haar (X_carrier_comp i)) := sorry
+    have h_haar_support :
+      (Function.mulSupport fun i ↦ haar (X_carrier_comp i)).Finite := by
+      -- 1. State the foundational property that the set of indices where the measure
+      --    of the compact open subgroup `C i` is not 1, is finite.
+      let F := {i : ι | (haar : Measure (G i)) ↑(C i) ≠ 1}
+      have hF_finite : F.Finite :=
+        haar_prod_support_finite
+          C hCopen.out hCcompact
+
+      -- 2. Prove that our support is a subset of this known finite set.
+      have h_subset :
+        Function.mulSupport (fun i ↦ haar (X_carrier_comp i)) ⊆ F := by
+        -- To prove the subset relation, we show that any element `i` in the support
+        -- must also be an element of `{j | haar (C j) ≠ 1}`.
+        intro i h_in_support
+        simp only [Function.mulSupport, Set.mem_setOf_eq] at h_in_support
+
+        -- Analyze the cases based on whether `i` is in the finite set `S`.
+        by_cases h_in_S : i ∈ S
+        · -- Case 1: `i ∈ S`.
+          -- This case leads to a contradiction, meaning no `i` from `S`
+          -- can be in the support.
+          -- From a contradiction, we can prove any goal.
+          exfalso
+
+          -- Prove the contradiction:
+          have h_comp_is_univ : X_carrier_comp i = Set.univ := by
+            simp [X_carrier_comp, h_in_S]
+
+          have h_measure_is_one : (haar : Measure (G i)) (Set.univ) = 1 := by
+            -- This follows from `haarMeasure_self` for compact spaces.
+            -- The canonical Haar measure of a compact space is 1.
+            -- Lean finds the necessary instances `[IsHaarMeasure haar]`
+            -- and `[CompactSpace (G i)]` automatically.
+            exact haarMeasure_univ
+
+          rw [h_comp_is_univ, h_measure_is_one] at h_in_support
+          exact h_in_support rfl
+
+        · -- Case 2: `i ∉ S`.
+          -- In this case, `X_carrier_comp i` is the subgroup `C i`.
+          have h_comp_is_C : X_carrier_comp i = ↑(C i) := by
+            simp [X_carrier_comp, h_in_S]
+
+          -- The hypothesis `h_in_support` is `haar (X_carrier_comp i) ≠ 1`.
+          -- Substituting `C i` gives `haar (↑(C i)) ≠ 1`.
+          rw [h_comp_is_C] at h_in_support
+
+          -- This is exactly the condition for membership in the superset `F`.
+          exact h_in_support
+
+      -- 3. Since our support is a subset of a finite set, it must also be finite.
+      exact Set.Finite.subset hF_finite h_subset
 
     have haar_box_is_finprod
       (U : Π i, Set (G i))
