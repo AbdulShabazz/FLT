@@ -1381,35 +1381,7 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
         letI : Fintype ↑(Function.mulSupport fun i ↦ haar (U i)) := h_support.fintype
         exact haar_measure_box_eq_finprod C U hU_measurable h_support
 
-    -- Now, we construct the final proof by rewriting with our verified hypotheses.
-
-    -- First, establish the measure of the LHS `haar (ψ '' X)`.
-    have h_lhs_measure :
-        haar (ψ '' X) = ∏ᶠ i, (mulEquivHaarChar (φ i) : ℝ≥0∞) *
-          haar (X_carrier_comp i) := by sorry
-      /- -- Rewrite the image and apply the product formula.
-      rw [h_img_is_prod, haar_box_is_finprod]
-
-      -- Goal 1: Prove the equality of the finitary products.
-      · apply finprod_congr
-        exact h_local_scale
-
-      -- Goal 2: Prove the sets `(φ i '' X_carrier_comp i)` are measurable.
-      · intro i
-        -- This follows from `φ i` being a measurable equivalence and our proof above.
-        exact (φ i).toMeasurableEquiv.measurableEmbedding.measurableSet_image
-          (h_X_carrier_comp_measurable i) -/
-
-    -- Next, establish the measure of the RHS `haar X`.
-    have h_rhs_measure : haar X = ∏ᶠ i, haar (X_carrier_comp i) := by sorry
-      -- Rewrite X and apply the product formula.
-      /- rw [hX_is_prod, haar_box_is_finprod]
-
-      -- The rewrite created a goal to prove the sets `X_carrier_comp i` are measurable.
-      -- We solve it using our reusable proof.
-      exact h_X_carrier_comp_measurable -/
-
-    -- For the first goal: Prove finite support for mulEquivHaarChar
+    -- Prove finite support for mulEquivHaarChar
     have h_char_support :
       (Function.mulSupport fun i ↦ ↑(mulEquivHaarChar (φ i) : ℝ≥0∞)).Finite := by
       simp only [Function.mulSupport, ENNReal.coe_ne_one]
@@ -1422,6 +1394,61 @@ lemma mulEquivHaarChar_restrictedProductCongrRight
           apply mulEquivHaarChar_eq_one_of_compactSpace
         simp [this]
       exact hS_finite.subset h_subset
+
+    -- Now, we construct the final proof by rewriting with our verified hypotheses.
+
+    -- First, establish the measure of the LHS `haar (ψ '' X)`.
+    have h_lhs_measure :
+        haar (ψ '' X) = ∏ᶠ i, (mulEquivHaarChar (φ i) : ℝ≥0∞) *
+          haar (X_carrier_comp i) := by
+      -- Rewrite the image of X as a box product using h_img_is_prod
+      rw [h_img_is_prod]
+
+      -- Show that the support for the measure of the image sets is finite.
+      -- This is required to use the product formula `haar_measure_box_eq_finprod`.
+      have h_support_image :
+        (Function.mulSupport fun i ↦ haar ((φ i) '' (X_carrier_comp i))).Finite := by
+        -- The support of the scaled measure is a subset of the union of the individual supports.
+        suffices (Function.mulSupport fun i ↦ haar (φ i '' X_carrier_comp i)) ⊆
+          (Function.mulSupport fun i ↦ (mulEquivHaarChar (φ i) : ℝ≥0∞)) ∪
+          (Function.mulSupport fun i ↦ haar (X_carrier_comp i)) from
+          (h_char_support.union h_haar_support).subset this
+        intro i hi
+        -- We use the local scaling property to relate the measure of the
+        -- image to the original measure.
+        specialize h_local_scale i
+        simp only [Function.mulSupport, Set.mem_setOf_eq, Set.mem_union] at *
+        rw [h_local_scale] at hi
+        contrapose! hi
+        rw [hi.1, hi.2, one_mul]
+
+      have h_image_measurable : ∀ i, MeasurableSet ((φ i) '' (X_carrier_comp i)) := fun i ↦
+        (φ i).toMeasurableEquiv.measurableEmbedding.measurableSet_image.mpr
+          (h_X_carrier_comp_measurable i)
+
+      letI : Fintype ↑(Function.mulSupport fun i ↦ haar (⇑(φ i) '' X_carrier_comp i)) :=
+        h_support_image.fintype
+
+      -- Apply the theorem that the Haar measure of a box
+      -- is the finitary product of component measures.
+      rw [haar_measure_box_eq_finprod
+        C (fun i ↦ (φ i) '' (X_carrier_comp i)) h_image_measurable h_support_image]
+
+      -- The goal is now an equality of two finitary products. We prove it by showing
+      -- the terms are equal for each index `i`.
+      apply finprod_congr
+      intro i
+      -- This local equality is exactly the `h_local_scale` lemma.
+      exact h_local_scale i
+
+    -- Next, establish the measure of the RHS `haar X`.
+    have h_rhs_measure : haar X = ∏ᶠ i, haar (X_carrier_comp i) := by sorry
+      -- Rewrite X and apply the product formula.
+      /- rw [hX_is_prod, haar_box_is_finprod]
+
+      -- The rewrite created a goal to prove the sets `X_carrier_comp i` are measurable.
+      -- We solve it using our reusable proof.
+      exact h_X_carrier_comp_measurable -/
 
     -- For the second goal: haar measure support
     have h_haar_support :
