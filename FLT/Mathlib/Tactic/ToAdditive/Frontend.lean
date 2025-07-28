@@ -42,8 +42,8 @@ syntax (name := to_additive_ignore_args) "to_additive_ignore_args" (ppSpace num)
 if needed.
 
 This attribute tells which argument is the type where this declaration uses the multiplicative
-structure. If there are multiple argument, we typically tag the first one.
-If this argument contains a fixed type, this declaration will note be additivized.
+structure. If there are multiple arguments, we typically tag the first one.
+If this argument contains a fixed type, this declaration will not be additivized.
 See the Heuristics section of `to_additive.attr` for more details.
 
 If a declaration is not tagged, it is presumed that the first argument is relevant.
@@ -58,11 +58,6 @@ anyway.
 
 Warning: interactions between this and the `(reorder := ...)` argument are not well-tested. -/
 syntax (name := to_additive_relevant_arg) "to_additive_relevant_arg " num : attr
-
-/-- An attribute that stores all the declarations that needs their arguments reordered when
-applying `@[to_additive]`. It is applied automatically by the `(reorder := ...)` syntax of
-`to_additive`, and should not usually be added manually. -/
-syntax (name := to_additive_reorder) "to_additive_reorder " (num+),+ : attr
 
 /-- An attribute that stores all the declarations that deal with numeric literals on variable types.
 
@@ -96,9 +91,11 @@ syntax toAdditiveAttrOption := &"attr" " := " Parser.Term.attrInstance,*
 syntax toAdditiveReorderOption := &"reorder" " := " (num+),+
 /-- Options to `to_additive`. -/
 syntax toAdditiveOption := "(" toAdditiveAttrOption <|> toAdditiveReorderOption ")"
+/-- An `existing` or `self` name hint for `to_additive`. -/
+syntax toAdditiveNameHint := (ppSpace (&"existing" <|> &"self"))?
 /-- Remaining arguments of `to_additive`. -/
 syntax toAdditiveRest :=
-  (ppSpace &"existing")? (ppSpace toAdditiveOption)* (ppSpace ident)? (ppSpace str)?
+  toAdditiveNameHint (ppSpace toAdditiveOption)* (ppSpace ident)? (ppSpace str)?
 
 /-- The attribute `to_additive` can be used to automatically transport theorems
 and definitions (but not inductive types and structures) from a multiplicative
@@ -229,7 +226,7 @@ mismatch error.
   * If the fixed type has an additive counterpart (like `↥Semigroup`), give it the `@[to_additive]`
     attribute.
   * If the fixed type has nothing to do with algebraic operations (like `TopCat`), add the attribute
-    `@[to_additive existing Foo]` to the fixed type `Foo`.
+    `@[to_additive self]` to the fixed type `Foo`.
   * If the fixed type occurs inside the `k`-th argument of a declaration `d`, and the
     `k`-th argument is not connected to the multiplicative structure on `d`, consider adding
     attribute `[to_additive_ignore_args k]` to `d`.
@@ -365,11 +362,6 @@ partial def _root_.String.splitCase (s : String) (i₀ : Pos := 0) (r : List Str
 initialize registerTraceClass `to_additive
 initialize registerTraceClass `to_additive_detail
 
-/-- Linter to check that the `reorder` attribute is not given manually -/
-register_option linter.toAdditiveReorder : Bool := {
-  defValue := true
-  descr := "Linter to check that the reorder attribute is not given manually." }
-
 /-- Linter, mostly used by `@[to_additive]`, that checks that the source declaration doesn't have
 certain attributes -/
 register_option linter.existingAttributeWarning : Bool := {
@@ -403,23 +395,10 @@ initialize ignoreArgsAttr : NameMapExtension (List Nat) ←
           | _ => throwUnsupportedSyntax
         return ids.toList }
 
-@[inherit_doc to_additive_reorder]
-initialize reorderAttr : NameMapExtension (List <| List Nat) ←
-  registerNameMapAttribute {
-    name := `to_additive_reorder
-    descr := "\
-      Auxiliary attribute for `to_additive` that stores arguments that need to be reordered. \
-      This should not appear in any file. \
-      We keep it as an attribute for now so that mathport can still use it, and it can generate a \
-      warning."
-    add := fun
-    | _, stx@`(attr| to_additive_reorder $[$[$reorders:num]*],*) => do
-      Linter.logLintIf linter.toAdditiveReorder stx m!"\
-        Using this attribute is deprecated. Use `@[to_additive (reorder := <num>)]` instead.\n\n\
-        That will also generate the additive version with the arguments swapped, \
-        so you are probably able to remove the manually written additive declaration."
-      pure <| reorders.toList.map (·.toList.map (·.raw.isNatLit?.get! - 1))
-    | _, _ => throwUnsupportedSyntax }
+/-- An extension that stores all the declarations that need their arguments reordered when
+applying `@[to_additive]`. It is applied using the `to_additive (reorder := ...)` syntax. -/
+initialize reorderAttr : NameMapExtension (List (List Nat)) ←
+  registerNameMapExtension _
 
 @[inherit_doc to_additive_relevant_arg]
 initialize relevantArgAttr : NameMapExtension Nat ←
@@ -496,6 +475,13 @@ structure Config : Type where
     raise a linter error.
     Note: the linter will never raise an error for inductive types and structures. -/
   existing : Option Bool := none
+  /-- An optional flag stating that the target of the translation is the target itself.
+  This can be used to reorder arguments, such as in
+  `attribute [to_dual self (reorder := 3 4)] LE.le`.
+  It can also be used to give a hint to `additiveTest`, such as in
+  `attribute [to_additive self] Unit`.
+  If `self := true`, we should also have `existing := true`. -/
+  self : Bool := false
   deriving Repr
 
 /-- Implementation function for `additiveTest`.
@@ -691,7 +677,6 @@ def reorderForall (reorder : List (List Nat) := []) (src : Expr) : MetaM Expr :=
       else
         throwError "the permutation\n{reorder}\nprovided by the reorder config option is too \
           large, the type{indentExpr src}\nhas only {xs.size} arguments"
-        return src
   else
     return src
 
@@ -704,7 +689,6 @@ def reorderLambda (reorder : List (List Nat) := []) (src : Expr) : MetaM Expr :=
       else
         throwError "the permutation\n{reorder}\nprovided by the reorder config option is too \
           large, the type{indentExpr src}\nhas only {xs.size} arguments"
-        return src
   else
     return src
 
@@ -857,6 +841,8 @@ partial def transformDeclAux
   addDeclarationRangesFromSyntax tgt (← getRef) cfg.ref
   if isProtected (← getEnv) src then
     setEnv <| addProtected (← getEnv) tgt
+  if defeqAttr.hasTag (← getEnv) src then
+    defeqAttr.setTag tgt
   if let some matcherInfo ← getMatcherInfo? src then
     /-
     Use `Match.addMatcherInfo tgt matcherInfo`
@@ -1129,24 +1115,28 @@ def guessName : String → String :=
 
 /-- Return the provided target name or autogenerate one if one was not provided. -/
 def targetName (cfg : Config) (src : Name) : CoreM Name := do
+  if cfg.self then
+    if cfg.tgt != .anonymous then
+      throwError m!"`to_additive self` ignores the provided name {cfg.tgt}"
+    return src
   let .str pre s := src | throwError "to_additive: can't transport {src}"
   trace[to_additive_detail] "The name {s} splits as {s.splitCase}"
   let tgt_auto := guessName s
   let depth := cfg.tgt.getNumParts
   let pre := pre.mapPrefix <| findTranslation? (← getEnv)
   let (pre1, pre2) := pre.splitAt (depth - 1)
-  if cfg.tgt == pre2.str tgt_auto && !cfg.allowAutoName && cfg.tgt != src then
+  let res := if cfg.tgt == .anonymous then pre.str tgt_auto else pre1 ++ cfg.tgt
+  if res == src then
+    throwError "to_additive: the generated additivised name equals the original name '{src}', \
+    meaning that no part of the name was additivised.\n\
+    If this is intentional, use the `@[to_additive self]` syntax.\n\
+    Otherwise, check that your declaration name is correct \
+    (if your declaration is an instance, try naming it)\n\
+    or provide an additivised name using the `@[to_additive my_add_name]` syntax."
+  if cfg.tgt == pre2.str tgt_auto && !cfg.allowAutoName then
     Linter.logLintIf linter.toAdditiveGenerateName cfg.ref m!"\
       to_additive correctly autogenerated target name for {src}.\n\
       You may remove the explicit argument {cfg.tgt}."
-  let res := if cfg.tgt == .anonymous then pre.str tgt_auto else pre1 ++ cfg.tgt
-  -- we allow translating to itself if `tgt == src`, which is occasionally useful for `additiveTest`
-  if res == src && cfg.tgt != src then
-    throwError "to_additive: the generated additivised name equals the original name '{src}', \
-    meaning that no part of the name was additivised.\n\
-    Check that your declaration name is correct \
-    (if your declaration is an instance, try naming it)\n\
-    or provide an additivised name using the '@[to_additive my_add_name]' syntax."
   if cfg.tgt != .anonymous then
     trace[to_additive_detail] "The automatically generated name would be {pre.str tgt_auto}"
   return res
@@ -1194,7 +1184,7 @@ def proceedFields (src tgt : Name) : CoreM Unit := do
 
 /-- Elaboration of the configuration options for `to_additive`. -/
 def elabToAdditive : Syntax → CoreM Config
-  | `(attr| to_additive%$tk $[?%$trace]? $[existing%$existing]?
+  | `(attr| to_additive%$tk $[?%$trace]? $existing?
       $[$opts:toAdditiveOption]* $[$tgt]? $[$doc]?) => do
     let mut attrs := #[]
     let mut reorder := []
@@ -1206,15 +1196,18 @@ def elabToAdditive : Syntax → CoreM Config
         reorder := reorder ++ reorders.toList.map (·.toList.map (·.raw.isNatLit?.get! - 1))
       | _ => throwUnsupportedSyntax
     reorder := reorder.reverse
+    let (existing, self) := match existing? with
+      | `(toAdditiveNameHint| existing) => (true, false)
+      | `(toAdditiveNameHint| self) => (true, true)
+      | _ => (false, false)
     trace[to_additive_detail] "attributes: {attrs}; reorder arguments: {reorder}"
-    return { trace := trace.isSome
-             tgt := match tgt with | some tgt => tgt.getId | none => Name.anonymous
-             doc := doc.bind (·.raw.isStrLit?)
-             allowAutoName := false
-             attrs
-             reorder
-             existing := some existing.isSome
-             ref := (tgt.map (·.raw)).getD tk }
+    return {
+      trace := trace.isSome
+      tgt := match tgt with | some tgt => tgt.getId | none => Name.anonymous
+      doc := doc.bind (·.raw.isStrLit?)
+      allowAutoName := false
+      attrs, reorder, existing, self
+      ref := (tgt.map (·.raw)).getD tk }
   | _ => throwUnsupportedSyntax
 
 mutual
