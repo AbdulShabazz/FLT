@@ -1,125 +1,327 @@
-import Mathlib.MeasureTheory.Group.Action
-import Mathlib.MeasureTheory.Group.Pointwise
-import Mathlib.Topology.Algebra.InfiniteSum.ENNReal
-import FLT.Mathlib.GroupTheory.Complement
-import FLT.Mathlib.Data.Set.Card -- shake says remove this but it breaks a simp call
-/-!
-# TODO
+/-
+Copyright (c) 2021 Yury Kudryashov. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Yury Kudryashov
+-/
+import Mathlib.Dynamics.Ergodic.MeasurePreserving
+import Mathlib.Dynamics.Minimal
+import Mathlib.GroupTheory.GroupAction.Hom
+import Mathlib.MeasureTheory.Group.MeasurableEquiv
+import Mathlib.MeasureTheory.Measure.Regular
+import Mathlib.MeasureTheory.Group.Defs
+import Mathlib.Order.Filter.EventuallyConst
 
-* Make `α` implicit in `SMulInvariantMeasure`
-* Rename `SMulInvariantMeasure` to `Measure.IsSMulInvariant`
+/-!
+# Measures invariant under group actions
+
+A measure `μ : Measure α` is said to be *invariant* under an action of a group `G` if scalar
+multiplication by `c : G` is a measure preserving map for all `c`. In this file we define a
+typeclass for measures invariant under action of an (additive or multiplicative) group and prove
+some basic properties of such measures.
 -/
 
-section MeasurableEmbeddingComap
 
-open MeasureTheory Measure
-
-@[to_additive]
-lemma _root_.MeasurableEmbedding.isMulLeftInvariant_comap {G H : Type*}
-    [Group G] [MeasurableSpace G] [MeasurableMul G]
-    [Monoid H] [MeasurableSpace H] [MeasurableMul H]
-    {φ : G →* H} (hφ : MeasurableEmbedding φ) (μ : Measure H) [IsMulLeftInvariant μ] :
-    IsMulLeftInvariant (comap φ μ) where
-  map_mul_left_eq_self g := by
-    ext s hs
-    rw [map_apply (by fun_prop) hs]
-    repeat rw [MeasurableEmbedding.comap_apply hφ]
-    have : φ '' ((fun x ↦ g * x) ⁻¹' s) = (fun x ↦ φ g * x) ⁻¹' (φ '' s) := by
-      ext
-      constructor
-      · rintro ⟨y, hy, rfl⟩
-        exact ⟨g * y, hy, by simp⟩
-      · intro ⟨y, yins, hy⟩
-        refine ⟨g⁻¹ * y, by simp [yins], ?_⟩
-        apply congrArg (φ g⁻¹ * ·) at hy
-        simp_rw [← mul_assoc, ← φ.map_mul, inv_mul_cancel, map_one, one_mul] at hy
-        exact hy
-    rw [this, ← map_apply (by fun_prop), IsMulLeftInvariant.map_mul_left_eq_self]
-    exact hφ.measurableSet_image.mpr hs
-
-@[to_additive]
-lemma _root_.MeasurableEmbedding.isMulRightInvariant_comap {G H : Type*}
-    [Group G] [MeasurableSpace G] [MeasurableMul G]
-    [Monoid H] [MeasurableSpace H] [MeasurableMul H]
-    {φ : G →* H} (hφ : MeasurableEmbedding φ) (μ : Measure H) [IsMulRightInvariant μ] :
-    IsMulRightInvariant (comap φ μ) where
-  map_mul_right_eq_self g := by
-    ext s hs
-    rw [map_apply (by fun_prop) hs]
-    repeat rw [MeasurableEmbedding.comap_apply hφ]
-    have : φ '' ((fun x ↦ x * g) ⁻¹' s) = (fun x ↦ x * φ g) ⁻¹' (φ '' s) := by
-      ext
-      constructor
-      · rintro ⟨y, hy, rfl⟩
-        exact ⟨y * g, hy, by simp⟩
-      · intro ⟨y, yins, hy⟩
-        refine ⟨y * g⁻¹, by simp [yins], ?_⟩
-        apply congrArg (· * φ g⁻¹) at hy
-        simp_rw [mul_assoc, ← φ.map_mul, mul_inv_cancel, map_one, mul_one] at hy
-        exact hy
-    rw [this, ← map_apply (by fun_prop), IsMulRightInvariant.map_mul_right_eq_self]
-    exact hφ.measurableSet_image.mpr hs
-
-end MeasurableEmbeddingComap
-
-open Subgroup Set
-open scoped Pointwise
+open scoped ENNReal NNReal Pointwise Topology
+open MeasureTheory.Measure Set Function Filter
 
 namespace MeasureTheory
-variable {G α : Type*} [Group G] [MeasurableSpace G] [MeasurableSpace α]
-  {H K : Subgroup G}
+
+universe u v w
+
+variable {G : Type u} {M : Type v} {α : Type w}
+
+namespace SMulInvariantMeasure
 
 @[to_additive]
-instance [MeasurableMul₂ G] : MeasurableMul₂ H where measurable_mul := by measurability
+instance zero [MeasurableSpace α] [SMul M α] : SMulInvariantMeasure M α (0 : Measure α) :=
+  ⟨fun _ _ _ => rfl⟩
+
+variable [SMul M α] {m : MeasurableSpace α} {μ ν : Measure α}
 
 @[to_additive]
-instance [MeasurableInv G] : MeasurableInv H where
-  measurable_inv := Measurable.subtype_mk (by measurability)
-
-variable [MeasurableMul G]
-
-@[to_additive]
-instance : MeasurableMul H where
-  measurable_mul_const c := by measurability
-  measurable_const_mul c := Measurable.subtype_mk (by measurability)
+instance add [SMulInvariantMeasure M α μ] [SMulInvariantMeasure M α ν] :
+    SMulInvariantMeasure M α (μ + ν) :=
+  ⟨fun c _s hs =>
+    show _ + _ = _ + _ from
+      congr_arg₂ (· + ·) (measure_preimage_smul c hs) (measure_preimage_smul c hs)⟩
 
 @[to_additive]
-lemma isMulLeftInvariant_subtypeVal (μ : Measure G) [μ.IsMulLeftInvariant]
-  (hH : MeasurableSet (H : Set G)) : (μ.comap Subtype.val : Measure H).IsMulLeftInvariant :=
-  have hφ : MeasurableEmbedding H.subtype := MeasurableEmbedding.subtype_coe hH
-  hφ.isMulLeftInvariant_comap μ
+instance smul [SMulInvariantMeasure M α μ] (c : ℝ≥0∞) : SMulInvariantMeasure M α (c • μ) :=
+  ⟨fun a _s hs => show c • _ = c • _ from congr_arg (c • ·) (measure_preimage_smul a hs)⟩
 
 @[to_additive]
-lemma isMulRightInvariant_subtypeVal (μ : Measure G) [μ.IsMulRightInvariant]
-    (hH : MeasurableSet (H : Set G)) : (μ.comap Subtype.val : Measure H).IsMulRightInvariant :=
-  have hφ : MeasurableEmbedding H.subtype := MeasurableEmbedding.subtype_coe hH
-  hφ.isMulRightInvariant_comap μ
+instance smul_nnreal [SMulInvariantMeasure M α μ] (c : ℝ≥0) : SMulInvariantMeasure M α (c • μ) :=
+  SMulInvariantMeasure.smul c
 
-@[to_additive index_mul_addHaar_addSubgroup]
-lemma index_mul_haar_subgroup [H.FiniteIndex] (hH : MeasurableSet (H : Set G)) (μ : Measure G)
-    [μ.IsMulLeftInvariant] : H.index * μ H = μ univ := by
-  obtain ⟨s, hs, -⟩ := H.exists_isComplement_left 1
-  have hs' : Finite s := hs.finite_left_iff.mpr inferInstance
-  calc
-    H.index * μ H = ∑' a : s, μ (a.val • H) := by simp [measure_smul, hs.encard_left]
-    _ = μ univ := by
-      rw [← measure_iUnion _ fun _ ↦ hH.const_smul _]
-      · simp [hs.mul_eq]
-      · exact fun a b hab ↦ hs.pairwiseDisjoint_smul a.2 b.2 (Subtype.val_injective.ne hab)
+end SMulInvariantMeasure
 
-@[to_additive index_mul_addHaar_addSubgroup_eq_addHaar_addSubgroup]
-lemma index_mul_haar_subgroup_eq_haar_subgroup [H.IsFiniteRelIndex K] (hHK : H ≤ K)
-    (hH : MeasurableSet (H : Set G)) (hK : MeasurableSet (K : Set G)) (μ : Measure G)
-    [μ.IsMulLeftInvariant] : H.relindex K * μ H = μ K := by
-  have := isMulLeftInvariant_subtypeVal μ hK
-  have := index_mul_haar_subgroup (H := H.subgroupOf K) (measurable_subtype_coe hH)
-    (μ.comap Subtype.val)
-  simp only at this
-  rw [MeasurableEmbedding.comap_apply, MeasurableEmbedding.comap_apply] at this
-  · simp only [image_univ, Subtype.range_coe_subtype, SetLike.setOf_mem_eq] at this
-    unfold subgroupOf at this
-    rwa [coe_comap, coe_subtype, Set.image_preimage_eq_of_subset (by simpa)] at this
-  · exact .subtype_coe hK
-  · exact .subtype_coe hK
+section AE_smul
+
+variable {m : MeasurableSpace α} [SMul G α]
+  (μ : Measure α) [SMulInvariantMeasure G α μ] {s : Set α}
+
+/-- See also `measure_preimage_smul_of_nullMeasurableSet` and `measure_preimage_smul`. -/
+@[to_additive "See also `measure_preimage_smul_of_nullMeasurableSet` and `measure_preimage_smul`."]
+theorem measure_preimage_smul_le (c : G) (s : Set α) : μ ((c • ·) ⁻¹' s) ≤ μ s :=
+  (outerMeasure_le_iff (m := .map (c • ·) μ.1)).2
+    (fun _s hs ↦ (SMulInvariantMeasure.measure_preimage_smul _ hs).le) _
+
+/-- See also `smul_ae`. -/
+@[to_additive "See also `vadd_ae`."]
+theorem tendsto_smul_ae (c : G) : Filter.Tendsto (c • ·) (ae μ) (ae μ) := fun _s hs ↦
+  eq_bot_mono (measure_preimage_smul_le μ c _) hs
+
+variable {μ}
+
+@[to_additive]
+theorem measure_preimage_smul_null (h : μ s = 0) (c : G) : μ ((c • ·) ⁻¹' s) = 0 :=
+  eq_bot_mono (measure_preimage_smul_le μ c _) h
+
+@[to_additive]
+theorem measure_preimage_smul_of_nullMeasurableSet (hs : NullMeasurableSet s μ) (c : G) :
+    μ ((c • ·) ⁻¹' s) = μ s := by
+  rw [← measure_toMeasurable s,
+    ← SMulInvariantMeasure.measure_preimage_smul c (measurableSet_toMeasurable μ s)]
+  exact measure_congr (tendsto_smul_ae μ c hs.toMeasurable_ae_eq) |>.symm
+
+end AE_smul
+
+section AE
+
+variable {m : MeasurableSpace α} [Group G] [MulAction G α]
+  (μ : Measure α) [SMulInvariantMeasure G α μ]
+
+@[to_additive (attr := simp)]
+theorem measure_preimage_smul (c : G) (s : Set α) : μ ((c • ·) ⁻¹' s) = μ s :=
+  (measure_preimage_smul_le μ c s).antisymm <| by
+    simpa [preimage_preimage] using measure_preimage_smul_le μ c⁻¹ ((c • ·) ⁻¹' s)
+
+@[to_additive (attr := simp)]
+theorem measure_smul (c : G) (s : Set α) : μ (c • s) = μ s := by
+  simpa only [preimage_smul_inv] using measure_preimage_smul μ c⁻¹ s
+
+variable {μ}
+
+@[to_additive]
+theorem measure_smul_eq_zero_iff {s} (c : G) : μ (c • s) = 0 ↔ μ s = 0 := by
+  rw [measure_smul]
+
+@[to_additive]
+theorem measure_smul_null {s} (h : μ s = 0) (c : G) : μ (c • s) = 0 :=
+  (measure_smul_eq_zero_iff _).2 h
+
+@[to_additive (attr := simp)]
+theorem smul_mem_ae (c : G) {s : Set α} : c • s ∈ ae μ ↔ s ∈ ae μ := by
+  simp only [mem_ae_iff, ← smul_set_compl, measure_smul_eq_zero_iff]
+
+@[to_additive (attr := simp)]
+theorem smul_ae (c : G) : c • ae μ = ae μ := by
+  ext s
+  simp only [mem_smul_filter, preimage_smul, smul_mem_ae]
+
+@[to_additive (attr := simp)]
+theorem eventuallyConst_smul_set_ae (c : G) {s : Set α} :
+    EventuallyConst (c • s : Set α) (ae μ) ↔ EventuallyConst s (ae μ) := by
+  rw [← preimage_smul_inv, eventuallyConst_preimage, Filter.map_smul, smul_ae]
+
+@[to_additive (attr := simp)]
+theorem smul_set_ae_le (c : G) {s t : Set α} : c • s ≤ᵐ[μ] c • t ↔ s ≤ᵐ[μ] t := by
+  simp only [ae_le_set, ← smul_set_sdiff, measure_smul_eq_zero_iff]
+
+@[to_additive (attr := simp)]
+theorem smul_set_ae_eq (c : G) {s t : Set α} : c • s =ᵐ[μ] c • t ↔ s =ᵐ[μ] t := by
+  simp only [Filter.eventuallyLE_antisymm_iff, smul_set_ae_le]
+
+end AE
+
+section MeasurableSMul
+
+variable {m : MeasurableSpace α} [MeasurableSpace M] [SMul M α] [MeasurableSMul M α] (c : M)
+  (μ : Measure α) [SMulInvariantMeasure M α μ]
+
+@[to_additive (attr := simp)]
+theorem measurePreserving_smul : MeasurePreserving (c • ·) μ μ :=
+  { measurable := measurable_const_smul c
+    map_eq := by
+      ext1 s hs
+      rw [map_apply (measurable_const_smul c) hs]
+      exact SMulInvariantMeasure.measure_preimage_smul c hs }
+
+@[to_additive (attr := simp)]
+protected theorem map_smul : map (c • ·) μ = μ :=
+  (measurePreserving_smul c μ).map_eq
+
+end MeasurableSMul
+
+@[to_additive]
+theorem MeasurePreserving.smulInvariantMeasure_iterateMulAct
+    {f : α → α} {_ : MeasurableSpace α} {μ : Measure α} (hf : MeasurePreserving f μ μ) :
+    SMulInvariantMeasure (IterateMulAct f) α μ :=
+  ⟨fun n _s hs ↦ (hf.iterate n.val).measure_preimage hs.nullMeasurableSet⟩
+
+@[to_additive]
+theorem smulInvariantMeasure_iterateMulAct
+    {f : α → α} {_ : MeasurableSpace α} {μ : Measure α} (hf : Measurable f) :
+    SMulInvariantMeasure (IterateMulAct f) α μ ↔ MeasurePreserving f μ μ :=
+  ⟨fun _ ↦
+    have := hf.measurableSMul₂_iterateMulAct
+    measurePreserving_smul (IterateMulAct.mk (f := f) 1) μ,
+    MeasurePreserving.smulInvariantMeasure_iterateMulAct⟩
+
+section SMulHomClass
+
+universe uM uN uα uβ
+variable {M : Type uM} {N : Type uN} {α : Type uα} {β : Type uβ}
+  [MeasurableSpace M] [MeasurableSpace N] [MeasurableSpace α] [MeasurableSpace β]
+
+@[to_additive]
+theorem smulInvariantMeasure_map [SMul M α] [SMul M β]
+    [MeasurableSMul M β]
+    (μ : Measure α) [SMulInvariantMeasure M α μ] (f : α → β)
+    (hsmul : ∀ (m : M) a, f (m • a) = m • f a) (hf : Measurable f) :
+    SMulInvariantMeasure M β (map f μ) where
+  measure_preimage_smul m S hS := calc
+    map f μ ((m • ·) ⁻¹' S)
+    _ = μ (f ⁻¹' ((m • ·) ⁻¹' S)) := map_apply hf <| hS.preimage (measurable_const_smul _)
+    _ = μ ((m • f ·) ⁻¹' S) := by rw [preimage_preimage]
+    _ = μ ((f <| m • ·) ⁻¹' S) := by simp_rw [hsmul]
+    _ = μ ((m • ·) ⁻¹' (f ⁻¹' S)) := by rw [← preimage_preimage]
+    _ = μ (f ⁻¹' S) := by rw [SMulInvariantMeasure.measure_preimage_smul m (hS.preimage hf)]
+    _ = map f μ S := (map_apply hf hS).symm
+
+@[to_additive]
+instance smulInvariantMeasure_map_smul [SMul M α] [SMul N α] [SMulCommClass N M α]
+    [MeasurableSMul M α] [MeasurableSMul N α]
+    (μ : Measure α) [SMulInvariantMeasure M α μ] (n : N) :
+    SMulInvariantMeasure M α (map (n • ·) μ) :=
+  smulInvariantMeasure_map μ _ (smul_comm n) <| measurable_const_smul _
+
+end SMulHomClass
+
+variable (G) {m : MeasurableSpace α} [Group G] [MulAction G α] (μ : Measure α)
+
+variable [MeasurableSpace G] [MeasurableSMul G α] in
+/-- Equivalent definitions of a measure invariant under a multiplicative action of a group.
+
+- 0: `SMulInvariantMeasure G α μ`;
+
+- 1: for every `c : G` and a measurable set `s`, the measure of the preimage of `s` under scalar
+     multiplication by `c` is equal to the measure of `s`;
+
+- 2: for every `c : G` and a measurable set `s`, the measure of the image `c • s` of `s` under
+     scalar multiplication by `c` is equal to the measure of `s`;
+
+- 3, 4: properties 2, 3 for any set, including non-measurable ones;
+
+- 5: for any `c : G`, scalar multiplication by `c` maps `μ` to `μ`;
+
+- 6: for any `c : G`, scalar multiplication by `c` is a measure preserving map. -/
+@[to_additive]
+theorem smulInvariantMeasure_tfae :
+    List.TFAE
+      [SMulInvariantMeasure G α μ,
+        ∀ (c : G) (s), MeasurableSet s → μ ((c • ·) ⁻¹' s) = μ s,
+        ∀ (c : G) (s), MeasurableSet s → μ (c • s) = μ s,
+        ∀ (c : G) (s), μ ((c • ·) ⁻¹' s) = μ s,
+        ∀ (c : G) (s), μ (c • s) = μ s,
+        ∀ c : G, Measure.map (c • ·) μ = μ,
+        ∀ c : G, MeasurePreserving (c • ·) μ μ] := by
+  tfae_have 1 ↔ 2 := ⟨fun h => h.1, fun h => ⟨h⟩⟩
+  tfae_have 1 → 6 := fun h c => (measurePreserving_smul c μ).map_eq
+  tfae_have 6 → 7 := fun H c => ⟨measurable_const_smul c, H c⟩
+  tfae_have 7 → 4 := fun H c => (H c).measure_preimage_emb (measurableEmbedding_const_smul c)
+  tfae_have 4 → 5
+  | H, c, s => by
+    rw [← preimage_smul_inv]
+    apply H
+  tfae_have 5 → 3 := fun H c s _ => H c s
+  tfae_have 3 → 2
+  | H, c, s, hs => by
+    rw [preimage_smul]
+    exact H c⁻¹ s hs
+  tfae_finish
+
+/-- Equivalent definitions of a measure invariant under an additive action of a group.
+
+- 0: `VAddInvariantMeasure G α μ`;
+
+- 1: for every `c : G` and a measurable set `s`, the measure of the preimage of `s` under
+     vector addition `(c +ᵥ ·)` is equal to the measure of `s`;
+
+- 2: for every `c : G` and a measurable set `s`, the measure of the image `c +ᵥ s` of `s` under
+     vector addition `(c +ᵥ ·)` is equal to the measure of `s`;
+
+- 3, 4: properties 2, 3 for any set, including non-measurable ones;
+
+- 5: for any `c : G`, vector addition of `c` maps `μ` to `μ`;
+
+- 6: for any `c : G`, vector addition of `c` is a measure preserving map. -/
+add_decl_doc vaddInvariantMeasure_tfae
+
+variable {G}
+variable [SMulInvariantMeasure G α μ]
+
+variable {μ}
+variable [MeasurableSpace G] [MeasurableSMul G α] in
+@[to_additive]
+theorem NullMeasurableSet.smul {s} (hs : NullMeasurableSet s μ) (c : G) :
+    NullMeasurableSet (c • s) μ := by
+  simpa only [← preimage_smul_inv] using
+    hs.preimage (measurePreserving_smul _ _).quasiMeasurePreserving
+
+section IsMinimal
+
+variable (G)
+variable [TopologicalSpace α] [ContinuousConstSMul G α] [MulAction.IsMinimal G α] {K U : Set α}
+
+include G in
+/-- If measure `μ` is invariant under a group action and is nonzero on a compact set `K`, then it is
+positive on any nonempty open set. In case of a regular measure, one can assume `μ ≠ 0` instead of
+`μ K ≠ 0`, see `MeasureTheory.measure_isOpen_pos_of_smulInvariant_of_ne_zero`. -/
+@[to_additive]
+theorem measure_isOpen_pos_of_smulInvariant_of_compact_ne_zero (hK : IsCompact K) (hμK : μ K ≠ 0)
+    (hU : IsOpen U) (hne : U.Nonempty) : 0 < μ U :=
+  let ⟨t, ht⟩ := hK.exists_finite_cover_smul G hU hne
+  pos_iff_ne_zero.2 fun hμU =>
+    hμK <|
+      measure_mono_null ht <|
+        (measure_biUnion_null_iff t.countable_toSet).2 fun _ _ => by rwa [measure_smul]
+
+/-- If measure `μ` is invariant under an additive group action and is nonzero on a compact set `K`,
+then it is positive on any nonempty open set. In case of a regular measure, one can assume `μ ≠ 0`
+instead of `μ K ≠ 0`, see `MeasureTheory.measure_isOpen_pos_of_vaddInvariant_of_ne_zero`. -/
+add_decl_doc measure_isOpen_pos_of_vaddInvariant_of_compact_ne_zero
+
+include G
+
+@[to_additive]
+theorem isLocallyFiniteMeasure_of_smulInvariant (hU : IsOpen U) (hne : U.Nonempty) (hμU : μ U ≠ ∞) :
+    IsLocallyFiniteMeasure μ :=
+  ⟨fun x =>
+    let ⟨g, hg⟩ := hU.exists_smul_mem G x hne
+    ⟨(g • ·) ⁻¹' U, (hU.preimage (continuous_id.const_smul _)).mem_nhds hg,
+      Ne.lt_top <| by rwa [measure_preimage_smul]⟩⟩
+
+variable [Measure.Regular μ]
+
+@[to_additive]
+theorem measure_isOpen_pos_of_smulInvariant_of_ne_zero (hμ : μ ≠ 0) (hU : IsOpen U)
+    (hne : U.Nonempty) : 0 < μ U :=
+  let ⟨_K, hK, hμK⟩ := Regular.exists_isCompact_not_null.mpr hμ
+  measure_isOpen_pos_of_smulInvariant_of_compact_ne_zero G hK hμK hU hne
+
+@[to_additive]
+theorem measure_pos_iff_nonempty_of_smulInvariant (hμ : μ ≠ 0) (hU : IsOpen U) :
+    0 < μ U ↔ U.Nonempty :=
+  ⟨fun h => nonempty_of_measure_ne_zero h.ne',
+    measure_isOpen_pos_of_smulInvariant_of_ne_zero G hμ hU⟩
+
+@[to_additive]
+theorem measure_eq_zero_iff_eq_empty_of_smulInvariant (hμ : μ ≠ 0) (hU : IsOpen U) :
+    μ U = 0 ↔ U = ∅ := by
+  rw [← not_iff_not, ← Ne, ← pos_iff_ne_zero,
+    measure_pos_iff_nonempty_of_smulInvariant G hμ hU, nonempty_iff_ne_empty]
+
+end IsMinimal
 
 end MeasureTheory

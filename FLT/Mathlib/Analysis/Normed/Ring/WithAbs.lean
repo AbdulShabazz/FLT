@@ -1,79 +1,157 @@
-import Mathlib.Analysis.Normed.Field.WithAbs
-import Mathlib.NumberTheory.NumberField.Basic
-import FLT.Mathlib.Topology.Algebra.UniformRing
+/-
+Copyright (c) 2024 Salvatore Mercuri. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Salvatore Mercuri
+-/
+import Mathlib.Analysis.Normed.Ring.Basic
+
+/-!
+# WithAbs
+
+`WithAbs v` is a type synonym for a semiring `R` which depends on an absolute value. The point of
+this is to allow the type class inference system to handle multiple sources of instances that
+arise from absolute values.
+
+## Main definitions
+- `WithAbs` : type synonym for a semiring which depends on an absolute value. This is
+  a function that takes an absolute value on a semiring and returns the semiring. This can be used
+  to assign and infer instances on a semiring that depend on absolute values.
+- `WithAbs.equiv v` : the canonical (type) equivalence between `WithAbs v` and `R`.
+- `WithAbs.ringEquiv v` : The canonical ring equivalence between `WithAbs v` and `R`.
+-/
+
+open Topology
+
+noncomputable section
+
+variable {R S : Type*} [Semiring S] [PartialOrder S]
+
+/-- Type synonym for a semiring which depends on an absolute value. This is a function that takes
+an absolute value on a semiring and returns the semiring. We use this to assign and infer instances
+on a semiring that depend on absolute values.
+
+This is also helpful when dealing with several absolute values on the same semiring. -/
+@[nolint unusedArguments]
+def WithAbs [Semiring R] : AbsoluteValue R S → Type _ := fun _ => R
 
 namespace WithAbs
 
-variable {R S : Type*} [Semiring S] [Field R] [PartialOrder S] (v : AbsoluteValue R S)
+section semiring
 
-instance : Field (WithAbs v) := ‹Field R›
+variable [Semiring R] (v : AbsoluteValue R S)
 
-variable {R' : Type*} [Field R'] [Module R R']
+instance instNontrivial [Nontrivial R] : Nontrivial (WithAbs v) := inferInstanceAs (Nontrivial R)
 
-instance [Module R R'] [FiniteDimensional R R'] : FiniteDimensional (WithAbs v) R' :=
-  ‹FiniteDimensional R R'›
+instance instUnique [Unique R] : Unique (WithAbs v) := inferInstanceAs (Unique R)
 
-instance [Algebra R R'] [Algebra.IsSeparable R R'] : Algebra.IsSeparable (WithAbs v) R' :=
-  ‹Algebra.IsSeparable R R'›
+instance instSemiring : Semiring (WithAbs v) := inferInstanceAs (Semiring R)
 
-variable {K : Type*} [Field K] {v : AbsoluteValue K ℝ}
-  {L : Type*} [Field L] [Algebra K L] {w : AbsoluteValue L ℝ}
+instance instInhabited : Inhabited (WithAbs v) := ⟨0⟩
 
-instance : Algebra (WithAbs v) (WithAbs w) := ‹Algebra K L›
+/-- The canonical (semiring) equivalence between `WithAbs v` and `R`. -/
+def equiv : WithAbs v ≃+* R := RingEquiv.refl _
 
-instance : Algebra K (WithAbs w) := ‹Algebra K L›
+/-- `WithAbs.equiv` as a ring equivalence. -/
+@[deprecated equiv (since := "2025-01-13")]
+def ringEquiv : WithAbs v ≃+* R := RingEquiv.refl _
 
-instance [NumberField K] : NumberField (WithAbs v) := ‹NumberField K›
+end semiring
 
-theorem norm_eq_abs (x : WithAbs v) : ‖x‖ = v x := rfl
+section more_instances
 
-theorem uniformContinuous_algebraMap {v : AbsoluteValue K ℝ} {w : AbsoluteValue L ℝ}
-    (h : ∀ x, w (algebraMap (WithAbs v) (WithAbs w) x) = v (WithAbs.equiv v x)) :
-    UniformContinuous (algebraMap (WithAbs v) (WithAbs w)) :=
-  isUniformInducing_of_comp h |>.uniformContinuous
+instance instCommSemiring [CommSemiring R] (v : AbsoluteValue R S) : CommSemiring (WithAbs v) :=
+  inferInstanceAs (CommSemiring R)
 
-instance : UniformContinuousConstSMul K (WithAbs w) :=
-  uniformContinuousConstSMul_of_continuousConstSMul _ _
+instance instRing [Ring R] (v : AbsoluteValue R S) : Ring (WithAbs v) := inferInstanceAs (Ring R)
 
-instance : IsScalarTower K L (WithAbs w) := inferInstanceAs (IsScalarTower K L L)
+instance instCommRing [CommRing R] (v : AbsoluteValue R S) : CommRing (WithAbs v) :=
+  inferInstanceAs (CommRing R)
+
+instance normedRing [Ring R] (v : AbsoluteValue R ℝ) : NormedRing (WithAbs v) :=
+  v.toNormedRing
+
+lemma norm_eq_abv [Ring R] (v : AbsoluteValue R ℝ) (x : WithAbs v) :
+    ‖x‖ = v (WithAbs.equiv v x) := rfl
+
+end more_instances
+
+section module
+
+variable {R' : Type*} [Semiring R]
+
+instance instModule_left [AddCommGroup R'] [Module R R'] (v : AbsoluteValue R S) :
+    Module (WithAbs v) R' :=
+  inferInstanceAs <| Module R R'
+
+instance instModule_right [Semiring R'] [Module R R'] (v : AbsoluteValue R' S) :
+    Module R (WithAbs v) :=
+  inferInstanceAs <| Module R R'
+
+end module
+
+section algebra
+
+variable {R' : Type*} [CommSemiring R] [Semiring R'] [Algebra R R']
+
+instance instAlgebra_left (v : AbsoluteValue R S) : Algebra (WithAbs v) R' :=
+  inferInstanceAs <| Algebra R R'
+
+instance instAlgebra_right (v : AbsoluteValue R' S) : Algebra R (WithAbs v) :=
+  inferInstanceAs <| Algebra R R'
+
+/-- The canonical algebra isomorphism from an `R`-algebra `R'` with an absolute value `v`
+to `R'`. -/
+def algEquiv (v : AbsoluteValue R' S) : (WithAbs v) ≃ₐ[R] R' := AlgEquiv.refl (A₁ := R')
+
+end algebra
+
+/-!
+### `WithAbs.equiv` preserves the ring structure.
+
+These are deprecated as they are special cases of the generic `map_zero` etc. lemmas
+after `WithAbs.equiv` is defined to be a ring equivalence.
+-/
+
+section equiv_semiring
+
+variable [Semiring R] (v : AbsoluteValue R S) (x y : WithAbs v) (r s : R)
+
+@[deprecated map_zero (since := "2025-01-13"), simp]
+theorem equiv_zero : equiv v 0 = 0 := rfl
+
+@[deprecated map_zero (since := "2025-01-13"), simp]
+theorem equiv_symm_zero : (equiv v).symm 0 = 0 := rfl
+
+@[deprecated map_add (since := "2025-01-13"), simp]
+theorem equiv_add : equiv v (x + y) = equiv v x + equiv v y := rfl
+
+@[deprecated map_add (since := "2025-01-13"), simp]
+theorem equiv_symm_add : (equiv v).symm (r + s) = (equiv v).symm r + (equiv v).symm s := rfl
+
+@[deprecated map_mul (since := "2025-01-13"), simp]
+theorem equiv_mul : equiv v (x * y) = equiv v x * equiv v y := rfl
+
+@[deprecated map_mul (since := "2025-01-13"), simp]
+theorem equiv_symm_mul : (equiv v).symm (x * y) = (equiv v).symm x * (equiv v).symm y := rfl
+
+end equiv_semiring
+
+section equiv_ring
+
+variable [Ring R] (v : AbsoluteValue R S) (x y : WithAbs v) (r s : R)
+
+@[deprecated map_sub (since := "2025-01-13"), simp]
+theorem equiv_sub : equiv v (x - y) = equiv v x - equiv v y := rfl
+
+@[deprecated map_sub (since := "2025-01-13"), simp]
+theorem equiv_symm_sub : (equiv v).symm (r - s) = (equiv v).symm r - (equiv v).symm s := rfl
+
+@[deprecated map_neg (since := "2025-01-13"), simp]
+theorem equiv_neg : equiv v (-x) = - equiv v x := rfl
+
+@[deprecated map_neg (since := "2025-01-13"), simp]
+theorem equiv_symm_neg : (equiv v).symm (-r) = - (equiv v).symm r := rfl
+
+end equiv_ring
 
 end WithAbs
-
-namespace AbsoluteValue.Completion
-
-variable {K : Type*} [Field K] {v : AbsoluteValue K ℝ}
-  {L : Type*} [Field L] [Algebra K L] {w : AbsoluteValue L ℝ}
-
-/-- If $K/L$ are fields, $v$ and $w$ are absolute values of $K$ and $L$ respectively, such that
-$w|_K = v$, then this is the natural semi-algebra map from the completion $K_v$ of $K$ at $v$
-to the completion $L_w$ at $w$. -/
-noncomputable abbrev semialgHomOfComp
-    (h : ∀ x, w (algebraMap (WithAbs v) (WithAbs w) x) = v (WithAbs.equiv v x)) :
-    v.Completion →ₛₐ[algebraMap (WithAbs v) (WithAbs w)] w.Completion :=
-  UniformSpace.Completion.mapSemialgHom _
-    (WithAbs.isUniformInducing_of_comp h).uniformContinuous.continuous
-
-theorem semialgHomOfComp_coe
-    (h : ∀ x, w (algebraMap (WithAbs v) (WithAbs w) x) = v (WithAbs.equiv v x))
-    (x : WithAbs v) :
-    semialgHomOfComp h x = algebraMap (WithAbs v) (WithAbs w) x :=
-  UniformSpace.Completion.mapSemialgHom_coe
-    (WithAbs.isUniformInducing_of_comp h).uniformContinuous x
-
-theorem semiAlgHomOfComp_dist_eq
-    (h : ∀ x, w (algebraMap (WithAbs v) (WithAbs w) x) = v (WithAbs.equiv v x))
-    (x y : v.Completion) :
-    dist (semialgHomOfComp h x) (semialgHomOfComp h y) = dist x y := by
-  refine UniformSpace.Completion.induction_on₂ x y ?_ (fun x y => ?_)
-  · refine isClosed_eq ?_ continuous_dist
-    exact continuous_iff_continuous_dist.1 UniformSpace.Completion.continuous_extension
-  · rw [semialgHomOfComp_coe, semialgHomOfComp_coe, UniformSpace.Completion.dist_eq]
-    exact UniformSpace.Completion.dist_eq x y ▸
-      (WithAbs.isometry_of_comp (L := WithAbs w) h).dist_eq x y
-
-theorem isometry_semiAlgHomOfComp
-    (h : ∀ x, w (algebraMap (WithAbs v) (WithAbs w) x) = v (WithAbs.equiv v x)) :
-    Isometry (semialgHomOfComp h) :=
-  Isometry.of_dist_eq <| semiAlgHomOfComp_dist_eq h
-
-end AbsoluteValue.Completion
